@@ -1,0 +1,114 @@
+<style>
+span.pointer {
+    cursor: pointer;
+}
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+
+/* The Close Button */
+.close {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+
+<h2 class="accordion w-100 text-primary">
+  <i class="fa fa-book" aria-hidden="true"></i>
+  {{ .Site.Params.publication.title }}
+</h2>
+
+<div class="panel overflow-hidden">
+  {{ range.Site.Params.publication.list }}
+  <p class="text-dark">
+    <i class="far fa-newspaper"></i> {{ .date }} &middot; {{ .authors | markdownify }} &middot;
+    <a class="text-primary" href="{{ .link }}"><i>"{{ .title }}"</i></a> 
+    {{ .journal }} - 
+    <span id="myBtn" class="pointer" style="font-weight:bold"><span class="text-primary">{{ .journal_abbvr }}</span></span> &middot; 
+    <a href="{{ .link_bib }}"><i class="text-primary zoomlink fa fa-quote-right fa-lg" aria-hidden="true"></i></a>
+    <a href="{{ .link_slides }}"><i class="text-primary zoomlink fa fa-file-pdf fa-lg" aria-hidden="true"></i></a>
+    <a href="{{ .link_arx }}"><i class="text-primary zoomlink ai ai-arxiv ai-lg" aria-hidden="true"></i></a>
+    <a href="{{ .link_blg }}"><i class="text-primary zoomlink fas fa-rss fa-lg" aria-hidden="true"></i></a>
+    <a href="{{ .link_git }}"><i class="text-primary zoomlink fas fa-code fa-lg" aria-hidden="true"></i></a>
+  </p> 
+  {{ end }}
+</div>
+
+<!-- The Modal -->
+<div id="myModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h4>
+        <i class="fa fa-book" aria-hidden="true"></i>
+        <span style="font-weight:bold">About {{ .Site.Params.icassp.title }}</span>
+    </h4>
+    <p>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> Google h5-index (2014-2018) - {{ .Site.Params.icassp.hindex }}</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> Google h5-median (2014-2018) - {{ .Site.Params.icassp.hmedian }}</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> {{ .Site.Params.icassp.ranking_idx1 }} in <span style="font-weight:bold"><a href="{{ .Site.Params.icassp.ranking_idx1_link }}">{{ .Site.Params.icassp.ranking_idx1_name }}</a></span>.</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> {{ .Site.Params.icassp.ranking_idx2 }} in <span style="font-weight:bold"><a href="{{ .Site.Params.icassp.ranking_idx2_link }}">{{ .Site.Params.icassp.ranking_idx2_name }}</a></span>.</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> {{ .Site.Params.icassp.descript }}</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> {{ .Site.Params.icassp.title }} {{ .Site.Params.icassp.date }} is happening in <a href="{{ .Site.Params.icassp.map_link }}">{{ .Site.Params.icassp.location }}</a>.
+    </p>
+  </div>
+
+</div>
+
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal 
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+}
+</script>

@@ -1,0 +1,16 @@
+<h2 class="accordion w-100 text-primary active">
+  <i class="{{ .Site.Params.about.icon }}"></i>
+  {{ .Site.Params.about.title }}
+</h2>
+
+<div class="panel overflow-hidden h-100 d-block">
+  <dl>
+    {{ range.Site.Params.about.list }}
+    <p class="lead text-dark" align="justify">{{ .bio | markdownify }}</p>
+    {{ end }}
+    <h4 class="text-dark"><b>Research Interests</b></h4>
+    {{ range.Site.Params.about.interest.list }}
+  	<h5 class="text-dark mb-0 ml-3"><i class="fa fa-cog fa-spin"></i> {{ .name }}</h5>
+  	{{ end }}
+  </dl>
+</div>

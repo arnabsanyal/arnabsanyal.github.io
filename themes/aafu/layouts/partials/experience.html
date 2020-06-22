@@ -1,0 +1,50 @@
+<h2 class="accordion w-100 text-primary">
+  <i class="fas {{ .Site.Params.experiences.icon }}"></i>
+  {{ .Site.Params.experiences.title }}
+</h2>
+
+<div class="panel overflow-hidden h-100 d-block">
+  {{ range.Site.Params.jobs.list }}
+  <dl>
+    <dt class="text-dark mb-0">
+      {{ if .link }} <a class="text-primary" href="{{ .link }}"> <i class="far fa-clipboard"></i> {{ .company }}</a
+      >{{ else }} <i class="far fa-clipboard"></i> {{ .company }} {{ end }}
+    </dt>
+    <dd class="text-dark ml-3">{{ .dates }} &middot; {{ .position | markdownify }}</dd>
+    <dd class="text-dark mb-0 ml-3">{{ .details | markdownify }}</dd>
+
+      {{ if .p4 }}
+    <dd class="text-dark mb-0 ml-3">
+      <ul>
+        <li>{{ .p1 | markdownify }}</li>
+        <li>{{ .p2 | markdownify }}</li>
+        <li>{{ .p3 | markdownify }}</li>
+        <li>{{ .p4 | markdownify }}</li>
+      </ul>
+    </dd>
+    {{ else if .p3 }}
+    <dd class="text-dark mb-0 ml-3">
+      <ul>
+        <li>{{ .p1 | markdownify }}</li>
+        <li>{{ .p2 | markdownify }}</li>
+        <li>{{ .p3 | markdownify }}</li>
+      </ul>
+    </dd>
+    {{ else if .p2 }}
+    <dd class="text-dark mb-0 ml-3">
+      <ul>
+        <li>{{ .p1 | markdownify }}</li>
+        <li>{{ .p2 | markdownify }}</li>
+      </ul>
+    </dd>
+    {{ else if .p1 }}
+    <dd class="text-dark mb-0 ml-3">
+      <ul>
+        <li>{{ .p1 | markdownify }}</li>
+      </ul>
+    </dd>
+    {{ end }}
+
+  </dl>
+  {{ end }}
+</div>

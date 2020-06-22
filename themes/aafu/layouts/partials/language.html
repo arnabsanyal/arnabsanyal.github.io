@@ -1,0 +1,15 @@
+<h2 class="accordion w-100 text-primary">
+  <i class="fas {{ .Site.Params.languages.icon }}"></i>
+  {{ .Site.Params.languages.title }}
+</h2>
+<div class="panel overflow-hidden">
+  {{ range.Site.Params.languages.list }}
+  <code>{{ .language }}</code>
+  <div class="rounded w-100 bg-secondary border border-secondary mt-1 mb-3">
+    <div
+      class="card bg-success"
+      style="width: {{ .languagerating }}%; height:15px;"
+    ></div>
+  </div>
+  {{ end }}
+</div>
