@@ -1,6 +1,0 @@
-archetypes/
-themes/
-static/
-*.toml
-.gitignore
-.gitmodules
