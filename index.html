@@ -84,44 +84,19 @@
     </div>
     <!Doctype>
 <html>
-	<head>
-  		<style>
-
-    		.underlay
-    		{
-      			position: relative;
-      			top: 0;
-      			left: 0;
-    		}
-    		.overlay
-    		{
-		     	position: absolute;
-		     	top: -2%;
-		     	left: 22%;
-    		}
-
-  		</style>
-	</head>
+	
 
 		<img
   			class="rounded-circle mb-4 mt-2 img-fluid"
-  			src="https://arnabsanyal.github.io//images/profile.png"
+  			src="https://arnabsanyal.github.io//images/profile.jpg"
   			alt="Arnab Sanyal"
   			style="width: 300px;"
 		/>
-		<img
-  			class="w3-border w3-padding  mb-4 mt-2 img-fluid overlay"
-  			src="https://arnabsanyal.github.io//images/frame.png"
-  			alt="Arnab Sanyal"
-  			style="width:20%"
-  			onmouseover="this.style.width='70%';this.style.transition='0.2s';"
-  			onmouseout="this.style.width='20%';"
-
-		/>
+		
 </html>
     <h1 class="text-dark mb-0">Arnab Sanyal</h1>
-<h2 class="text-dark mb-0">Actively Seeking Full Time Positions for Immediate Hire</h2>
-<h3 class="text-dark mb-0">in United States of America</h3>
+<h2 class="text-dark mb-0">Deep Learning Compilers SysDE I at Amazon Lab126</h2>
+<h3 class="text-dark mb-0">Sunnyvale, CA, USA</h3>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons/css/academicons.min.css">
 <div class="mt-2 d-flex flex-wrap justify-content-center">
   
@@ -215,12 +190,179 @@
   
 </div>
 
-    <footer class="text-dark mt-4">
-	
-  	
-	
-	Stay Tuned!
+    <style>
+span.pointer {
+    cursor: pointer;
+}
+ 
+.modal1 {
+    display: none;  
+    position: fixed;  
+    z-index: 1;  
+    padding-top: 100px;  
+    left: 0;
+    top: 0;
+    width: 100%;  
+    height: 100%;  
+    overflow: auto;  
+    background-color: rgb(0,0,0);  
+    background-color: rgba(0,0,0,0.4);  
+}
+
+ 
+.modal-content1 {
+    background-color: #fefefe;
+    margin: auto;
+    display: block;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+     
+}
+
+ 
+.modal-content1 {  
+  -webkit-animation-name: zoom;
+  -webkit-animation-duration: 0.6s;
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@-webkit-keyframes zoom {
+  from {-webkit-transform:scale(0)} 
+  to {-webkit-transform:scale(1)}
+}
+
+@keyframes zoom {
+  from {transform:scale(0)} 
+  to {transform:scale(1)}
+}
+
+ 
+.close1 {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close1:hover,
+.close1:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+.close2 {
+    color: #aaaaaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close2:hover,
+.close2:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+<footer class="text-primary mt-4">
+	<span id="btn1" class="pointer">Contact Me</span> &middot <span id="btn2" class="pointer">My Location</span>
 </footer>
+
+
+<div id="modalClass1" class="modal1">
+
+  
+  <div class="modal-content1">
+    <span class="close1">&times;</span>
+    <h2>
+        <i class="fas fa-camera" aria-hidden="true"></i>
+        <span style="font-weight:bold">Scan me with your Phone Camera App</span>
+    </h2>
+    <img 
+    	class="w3-border w3-padding  mb-4 mt-2 img-fluid modal-content1"  
+    	src="https://arnabsanyal.github.io//images/frame.png" 
+    	alt="Arnab Sanyal"
+			style="width:25%"
+    />
+    
+  </div>
+
+</div>
+
+<div id="modalClass2" class="modal1">
+
+  
+  <div class="modal-content1">
+    <span class="close2">&times;</span>
+    <h2>
+        <i class="fa fa-map-marker" aria-hidden="true"></i>
+        <span style="font-weight:bold">My Work Location</span>
+    </h2>
+    <p>
+    	<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3169.211197607489!2d-122.03778151727107!3d37.408482692222556!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808fb7a03c2e216f%3A0x2ffcdf6247135163!2sAmazon%20Lab126!5e0!3m2!1sen!2sus!4v1598985442806!5m2!1sen!2sus" width="600" height="450" frameborder="0" style="border:1px solid #888;" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe>
+    </p>
+    
+  </div>
+
+</div>
+
+<script>
+
+var modal1 = document.getElementById("modalClass1");
+
+
+var btn1 = document.getElementById("btn1");
+
+
+var span1 = document.getElementsByClassName("close1")[0];
+
+
+btn1.onclick = function() {
+  modal1.style.display = "block";
+}
+
+
+span1.onclick = function() {
+  modal1.style.display = "none";
+}
+
+
+window.onclick = function(event) {
+  if (event.target == modal1) {
+    modal1.style.display = "none";
+  }
+}
+</script>
+
+<script>
+
+var modal2 = document.getElementById("modalClass2");
+
+
+var btn2 = document.getElementById("btn2");
+
+
+var span2 = document.getElementsByClassName("close2")[0];
+
+
+btn2.onclick = function() {
+  modal2.style.display = "block";
+}
+
+
+span2.onclick = function() {
+  modal2.style.display = "none";
+}
+
+
+window.onclick = function(event) {
+  if (event.target == modal2) {
+    modal2.style.display = "none";
+  }
+}
+</script>
 
   </div>
   <div class="col-md-7 border rounded p-2 mb-4">
@@ -232,13 +374,13 @@
 <div class="panel overflow-hidden h-100 d-block">
   <dl>
     
-    <p class="lead text-dark" align="justify">My name is Arnab Sanyal. I am a recent graduate from USC with 2 masters (EE and CS). Prior to this, I have a progressive dual degree from IIT Kharagpur (BTech + MTech in Electrical Engineering, Instrumentation &amp; Signal Processing). At USC I was pursuing a PhD in ML Algorithms optimizations for Accelerator Architectures before I quit for personal reasons. I published in ICASSP 2020. Between Qualcomm and MediaTek, I have 30 weeks of internship-experience, and 3 years of research exeperience in machine-learning, graph-theory, and accelerator-architecture. Currently, I am looking for full-time opportunities in USA. My internship at MediaTek had me working on reducing training/inference computation complexity for RNNs/LSTMs running on accelerator architectures.</p>
-    <p class="lead text-dark" align="justify">If you want to connect with me please click on the social media icons, and/or hover on the QR code above, scan it with your phone's camera.</p> 
-    <p class="text-primary"><b>Actively seeking full-time positions from August 2020 with Machine-learning, data-science and software-engineering focus.</b></p>
+    <p class="lead text-dark" align="justify">My name is Arnab Sanyal. I am a recent graduate from USC with 2 masters (EE and CS). Prior to this, I have a progressive dual degree from IIT Kharagpur (BTech + MTech in Electrical Engineering, Instrumentation &amp; Signal Processing). I published in ICASSP 2020. Between Qualcomm and MediaTek, I have 30 weeks of internship-experience, and 3 years of research exeperience in machine-learning algorithms optimizations, graph-theory, and accelerator-architecture. My internship at MediaTek had me working on reducing training/inference computation complexity for RNNs/LSTMs running on accelerator architectures. Currently, I work at Amazon Lab126.</p>
+    
+    
     
     <h4 class="text-dark"><b>Research Interests</b></h4>
     
-  	<h5 class="text-dark mb-0 ml-3"><i class="fa fa-cog fa-spin"></i> Deep Learning Training Algorithms</h5>
+  	<h5 class="text-dark mb-0 ml-3"><i class="fa fa-cog fa-spin"></i> Deep Learning Compilers</h5>
   	
   	<h5 class="text-dark mb-0 ml-3"><i class="fa fa-cog fa-spin"></i> Computation/Energy Reduction in Training/Inference</h5>
   	
@@ -252,151 +394,79 @@
 </h2>
 
 <div class="panel overflow-hidden h-100 d-block">
+
   
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="https://www.mediatek.com/innovations/artificial-intelligence"> <i class="far fa-clipboard"></i> MediaTek, USA</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">May 2020 - Aug 2020 &middot; <strong>AI Architecture and Algorithm Intern</strong> - AI Research Lab</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
 
-      
+  <dt class="text-dark mb-0">
+    <a class="text-primary" href="http://lab126.com/" target="_blank"> <i class="far fa-clipboard"></i> Amazon Lab126, USA</a>
+  </dt>
+  <dd class="text-dark ml-3">Sept 2020 - Present &middot; <b>Systems Development Engineer I</b> - Deep Learning Compilers Team</dd>
 
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="http://graduateschool.usc.edu/"> <i class="far fa-clipboard"></i> Graduate School, U.S.C.</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">May 2018 - May 2020 &middot; <strong>Graduate Research Assistant</strong> - Dept. of Electrical &amp; Computer Engg.</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
+  <dt class="text-dark mb-0">
+    <a class="text-primary" href="https://www.mediatek.com/innovations/artificial-intelligence" target="_blank"> <i class="far fa-clipboard"></i> MediaTek, USA</a>
+  </dt>
+  <dd class="text-dark ml-3">May 2020 - Aug 2020 &middot; <b>AI Architecture and Algorithm Intern</b> - AI Research Team</dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Worked on reducing training/inference computation complexity for RNN/LSTM running on accelerator architectures.</li>
+    </ul>
+  </dd>
 
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Worked at <a href="https://hal.usc.edu/">Hardware Accelerated Learning</a> group</li>
-        <li>Area of Research - Algorithm and Architecture Design for Neural Networks Training on Accelerators</li>
-        <li>Published in top signal processing conference</li>
-      </ul>
-    </dd>
-    
+  <dt class="text-dark mb-0">
+    <a class="text-primary" href="http://graduateschool.usc.edu/" target="_blank"> <i class="far fa-clipboard"></i> Graduate School, U.S.C.</a>
+  </dt>
+  <dd class="text-dark ml-3">Aug 2017 - Jul 2020 &middot; <b>Graduate Teaching Assistant</b> - Dept. of Electrical & Computer Engg.</dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Teaching Assistant for 9 courses over 9 semesters</li>
+    </ul>
+  </dd>
+  <dd class="text-dark ml-3">Aug 2017 - May 2020 &middot; <b>Graduate Research Assistant</b> - Dept. of Electrical & Computer Engg.</dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Worked at <a class="text-primary" href="https://hal.usc.edu/" target="_blank">Hardware Accelerated Learning</a> group</li>
+      <li>Area of Research - Algorithm and Architecture Design for Neural Networks Training on Accelerators</li>
+      <li>Published in top signal processing conference</li>
+      <li>Worked in <a class="text-primary" href="https://sites.usc.edu/projectsharp/" target="_blank">Project SHARP</a></li>
+      <li>Worked on graph theory problems like PageRank, NxContingency, graph embedding and belief propagation</li>
+    </ul>
+  </dd>
 
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="http://graduateschool.usc.edu/"> <i class="far fa-clipboard"></i> Graduate School, U.S.C.</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">Aug 2017 - Jul 2020 &middot; <strong>Graduate Teaching Assistant</strong> - Dept. of Electrical &amp; Computer Engg.</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
+  <dt class="text-dark mb-0">
+    <a class="text-primary" href="https://www.qualcomm.com/company/locations/india" target="_blank"> <i class="far fa-clipboard"></i> Qualcomm India Private Ltd.</a>
+  </dt>
+  <dd class="text-dark ml-3">May 2016 - Jul 2016 &middot; <b>Systems Sofware Engineering Intern</b> - Linux Perf. Team</dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Designed an Android system app for Testing and Benchmarking Systems</li>
+    </ul>
+  </dd>
+  <dd class="text-dark ml-3">May 2015 - Jul 2015 &middot; <b>Systems Sofware Engineering Intern</b> - Linux Kernel Team</dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Implemented a Memory Crawler app for Linux on python</li>
+      <li>Simulated a Smart Traffic Grid on Sumo (coded in python)</li>
+    </ul>
+  </dd>
 
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Teaching Assistant for 8 courses over 8 semesters</li>
-      </ul>
-    </dd>
-    
+  <dt class="text-dark mb-0">
+    <a class="text-primary" href="http://www.iitkgp.ac.in/" target="_blank"> <i class="far fa-clipboard"></i> Indian Institute of Technology, Kharagpur</a>
+  </dt>
+  <dd class="text-dark ml-3">Jan 2016 - Apr 2017 &middot; <b>Teaching Assistant</b> - <a class="text-primary" href="http://www.ee.iitkgp.ac.in/" target="_blank">Dept. of Electrical Engineering</a></dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Teaching Assistant for 3 courses during a period of 3 semesters</li>
+    </ul>
+  </dd>
+  <dd class="text-dark ml-3">Jul 2015 - Apr 2017 &middot; <b>Undergraduate Research Assistant</b> - <a class="text-primary" href="http://cse.iitkgp.ac.in/" target="_blank">Dept. of Computer Science</a></dd>
+  <dd class="text-dark mb-0 ml-3">
+    <ul>
+      <li>Researched at <a class="text-primary" href="http://cse.iitkgp.ac.in/resgrp/seal/" target="_blank">Secured Embedded Architecture Laboratory</a></li>
+      <li>Software Acceleration of novel Reversible Watermarking Algorithms</li>
+      <li>Accelerator architecture design on FPGA</li>
+    </ul>
+  </dd>
 
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="http://graduateschool.usc.edu/"> <i class="far fa-clipboard"></i> Graduate School, U.S.C.</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">Aug 2017 - May 2018 &middot; <strong>Graduate Research Assistant</strong> - Dept. of Electrical &amp; Computer Engg.</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
-
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Worked in <a href="https://sites.usc.edu/projectsharp/">Project SHARP</a></li>
-        <li>Worked on graph theory problems like PageRank, NxContingency, graph embedding and belief propagation</li>
-      </ul>
-    </dd>
-    
-
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="http://www.ee.iitkgp.ac.in/"> <i class="far fa-clipboard"></i> Indian Institute of Technology, Kharagpur</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">Jan 2016 - Apr 2017 &middot; <strong>Teaching Assistant</strong> - Dept. of Electrical Engineering</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
-
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Teaching Assistant for 3 courses during a period of 3 semesters</li>
-      </ul>
-    </dd>
-    
-
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="http://cse.iitkgp.ac.in/"> <i class="far fa-clipboard"></i> Indian Institute of Technology, Kharagpur</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">Jul 2015 - Apr 2017 &middot; <strong>Undergraduate Research Assistant</strong> - Dept. of Computer Science</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
-
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Researched at <a href="http://cse.iitkgp.ac.in/resgrp/seal/">Secured Embedded Architecture Laboratory</a></li>
-        <li>Software Acceleration of novel Reversible Watermarking Algorithms</li>
-        <li>Accelerator architecture design on FPGA</li>
-      </ul>
-    </dd>
-    
-
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="https://www.qualcomm.com/company/locations/india"> <i class="far fa-clipboard"></i> Qualcomm India Private Ltd.</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">May 2016 - Jul 2016 &middot; <strong>Sofware Engineering Intern</strong> - Linux Perf. Team</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
-
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Designed an Android system app for Testing and Benchmarking Systems</li>
-      </ul>
-    </dd>
-    
-
-  </dl>
-  
-  <dl>
-    <dt class="text-dark mb-0">
-       <a class="text-primary" href="https://www.qualcomm.com/company/locations/india"> <i class="far fa-clipboard"></i> Qualcomm India Private Ltd.</a
-      >
-    </dt>
-    <dd class="text-dark ml-3">May 2015 - Jul 2015 &middot; <strong>Sofware Engineering Intern</strong> - Linux Kernel Team</dd>
-    <dd class="text-dark mb-0 ml-3"></dd>
-
-      
-    <dd class="text-dark mb-0 ml-3">
-      <ul>
-        <li>Implemented a Memory Crawler app for Linux on python</li>
-        <li>Simulated a Smart Traffic Grid on Sumo (coded in python)</li>
-      </ul>
-    </dd>
-    
-
-  </dl>
-  
 </div>
 
     <h2 class="accordion w-100 text-primary">
@@ -407,10 +477,14 @@
   
   <dl>
     <dt class="text-dark">
-       <a class="text-primary" href="https://catalogue.usc.edu/preview_program.php?catoid=11&amp;poid=10897&amp;returnto=3699"> <i class="fas fa-university"></i> M.S. in Computer Science</a>
+       <a class="text-primary" href="https://catalogue.usc.edu/preview_program.php?catoid=11&amp;poid=10897&amp;returnto=3699" target="_blank"> <i class="fas fa-university"></i> M.S. in Computer Science</a>
       
    </dt>
-    <dd class="text-dark mb-0 ml-3"> <b> 2017 - 2020 </b> &middot; University of Southern California</dd>
+   
+   <dd class="text-dark mb-0 ml-3"> 
+      <b> 2017 - 2020 </b> &middot; University of Southern California &middot; <a href="https://drive.google.com/file/d/1XHPktfIhyItJRjvezZU65iEpuL856Yyt/view?usp=sharing" target="_blank"><i class="text-primary zoomlink fas fa-award"></i></a>
+    </dd>
+   
 
     
     <dd class="text-dark mb-0 ml-3">
@@ -442,10 +516,14 @@
   
   <dl>
     <dt class="text-dark">
-       <a class="text-primary" href="https://catalogue.usc.edu/preview_program.php?catoid=11&amp;poid=10911&amp;returnto=3756"> <i class="fas fa-university"></i> M.S. in Electrical &amp; Computer Engineering</a>
+       <a class="text-primary" href="https://catalogue.usc.edu/preview_program.php?catoid=11&amp;poid=10911&amp;returnto=3756" target="_blank"> <i class="fas fa-university"></i> M.S. in Electrical &amp; Computer Engineering</a>
       
    </dt>
-    <dd class="text-dark mb-0 ml-3"> <b> 2018 - 2020 </b> &middot; University of Southern California</dd>
+   
+   <dd class="text-dark mb-0 ml-3"> 
+      <b> 2018 - 2020 </b> &middot; University of Southern California &middot; <a href="https://drive.google.com/file/d/1tLIAW-qqE9f9hRlH-Ficb_b19d86mqNO/view?usp=sharing" target="_blank"><i class="text-primary zoomlink fas fa-award"></i></a>
+    </dd>
+   
 
     
     <dd class="text-dark mb-0 ml-3">
@@ -479,10 +557,14 @@
   
   <dl>
     <dt class="text-dark">
-       <a class="text-primary" href="https://erp.iitkgp.ac.in/ERPWebServices/curricula/CurriculaSubjectsList.jsp?stuType=UG&amp;splCode=EE5"> <i class="fas fa-university"></i> B.Tech. (Hons.) in Electrical Engineering with M.Tech. in Instrumentation and Signal Processing Engineering (Progressive Dual Degree)</a>
+       <a class="text-primary" href="https://erp.iitkgp.ac.in/ERPWebServices/curricula/CurriculaSubjectsList.jsp?stuType=UG&amp;splCode=EE5" target="_blank"> <i class="fas fa-university"></i> B.Tech. (Hons.) in Electrical Engineering with M.Tech. in Instrumentation and Signal Processing Engineering (Progressive Dual Degree)</a>
       
    </dt>
-    <dd class="text-dark mb-0 ml-3"> <b> 2012 - 2017 </b> &middot; Indian Institute of Technology, Kharagpur</dd>
+   
+    <dd class="text-dark mb-0 ml-3"> 
+      <b> 2012 - 2017 </b> &middot; Indian Institute of Technology, Kharagpur
+    </dd>
+    
 
     
     <dd class="text-dark mb-0 ml-3">
@@ -548,9 +630,28 @@ span.pointer {
 .modal-content {
     background-color: #fefefe;
     margin: auto;
+    display: block;
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
+}
+
+ 
+.modal-content {  
+  -webkit-animation-name: zoom;
+  -webkit-animation-duration: 0.6s;
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@-webkit-keyframes zoom {
+  from {-webkit-transform:scale(0)} 
+  to {-webkit-transform:scale(1)}
+}
+
+@keyframes zoom {
+  from {transform:scale(0)} 
+  to {transform:scale(1)}
 }
 
  
@@ -578,15 +679,15 @@ span.pointer {
   
   <p class="text-dark">
     <i class="far fa-newspaper"></i> 2019 &middot; <strong>Arnab Sanyal</strong>, Peter A. Beerel, Keith M. Chugg &middot;
-    <a class="text-primary" href="https://ieeexplore.ieee.org/document/9053015"><i>"Neural Network Training with Approximate Logarithmic Computations"</i></a> 
+    <a class="text-primary" href="https://ieeexplore.ieee.org/document/9053015" target="_blank"><i>"Neural Network Training with Approximate Logarithmic Computations"</i></a> 
      in IEEE International Conference on Acoustics, Speech, and Signal Processing - 
     <span id="myBtn" class="pointer" style="font-weight:bold"><span class="text-primary">ICASSP 2020</span></span> &middot; 
-    <a href="./bib/ieee_icassp_2020_nntalc.bib"><i class="text-primary zoomlink fa fa-quote-right fa-lg" aria-hidden="true"></i></a>
-    <a href="./slides/ieee_icassp_2020_nntalc.pdf"><i class="text-primary zoomlink fa fa-file-pdf fa-lg" aria-hidden="true"></i></a>
-    <a href="https://arxiv.org/abs/1910.09876"><i class="text-primary zoomlink ai ai-arxiv ai-lg" aria-hidden="true"></i></a>
-    <a href="https://towardsdatascience.com/neural-networks-training-with-approximate-logarithmic-computations-44516f32b15b"><i class="text-primary zoomlink fas fa-rss fa-lg" aria-hidden="true"></i></a>
-    <a href="https://github.com/arnabsanyal/lnsdnn"><i class="text-primary zoomlink fas fa-code fa-lg" aria-hidden="true"></i></a>
-    <a href="./certificates/ICASSP2020_CertAttendance_P4836.pdf"><i class="text-primary zoomlink fas fa-award" aria-hidden="true"></i></a>
+    <a href="./bib/ieee_icassp_2020_nntalc.bib" target="_blank"><i class="text-primary zoomlink fa fa-quote-right fa-lg" aria-hidden="true"></i></a>
+    <a href="./slides/ieee_icassp_2020_nntalc.pdf" target="_blank"><i class="text-primary zoomlink fa fa-file-pdf fa-lg" aria-hidden="true"></i></a>
+    <a href="https://arxiv.org/abs/1910.09876" target="_blank"><i class="text-primary zoomlink ai ai-arxiv ai-lg" aria-hidden="true"></i></a>
+    <a href="https://towardsdatascience.com/neural-networks-training-with-approximate-logarithmic-computations-44516f32b15b" target="_blank"><i class="text-primary zoomlink fas fa-rss fa-lg" aria-hidden="true"></i></a>
+    <a href="https://github.com/arnabsanyal/lnsdnn" target="_blank"><i class="text-primary zoomlink fas fa-code fa-lg" aria-hidden="true"></i></a>
+    <a href="./certificates/ICASSP2020_CertAttendance_P4836.pdf" target="_blank"><i class="text-primary zoomlink fas fa-award" aria-hidden="true"></i></a>
   </p> 
   
 </div>
@@ -597,15 +698,15 @@ span.pointer {
   
   <div class="modal-content">
     <span class="close">&times;</span>
-    <h4>
+    <h2>
         <i class="fa fa-book" aria-hidden="true"></i>
         <span style="font-weight:bold">About IEEE ICASSP</span>
-    </h4>
+    </h2>
     <p>
     <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> Google h5-index (2014-2018) - 80</br>
     <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> Google h5-median (2014-2018) - 140</br>
-    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> #1 (overall) in <span style="font-weight:bold"><a href="https://scholar.google.com/citations?view_op=top_venues&amp;hl=en&amp;venue=HHC6AUo36fEJ.2019&amp;vq=phy_acousticssound">Acoustics &amp; Sound</a></span>.</br>
-    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> #4 (overall) and #1 (conferences only) in <span style="font-weight:bold"><a href="https://scholar.google.com/citations?view_op=top_venues&amp;hl=en&amp;venue=HHC6AUo36fEJ.2019&amp;vq=eng_signalprocessing">Signal Processing</a></span>.</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> #1 (overall) in <span style="font-weight:bold"><a href="https://scholar.google.com/citations?view_op=top_venues&amp;hl=en&amp;venue=HHC6AUo36fEJ.2019&amp;vq=phy_acousticssound" target="_blank">Acoustics &amp; Sound</a></span>.</br>
+    <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> #4 (overall) and #1 (conferences only) in <span style="font-weight:bold"><a href="https://scholar.google.com/citations?view_op=top_venues&amp;hl=en&amp;venue=HHC6AUo36fEJ.2019&amp;vq=eng_signalprocessing" target="_blank">Signal Processing</a></span>.</br>
     <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> World’s largest and most comprehensive technical conference focused on signal processing and its applications.</br>
     <i class="fa fa-chart-bar fa-rotate-90" aria-hidden="true"></i> IEEE ICASSP 2020 was held at <a href="https://goo.gl/maps/vD4yzjpAsu1gzskr7" target="_blank">Barcelona, Spain</a>.
     </p>
@@ -651,8 +752,8 @@ window.onclick = function(event) {
       <a class="text-primary" href="#"> <i class="fas fa-star"></i> <code>Accelerating Neural Network Training with Approximate Computations</code></a>
     </dt>
     
-    <dd class="text-dark mb-0 ml-3"> <b> Jan 2018 - present &middot; University of Southern California, Los Angeles </b> </dd>
-    <dd class="text-dark mb-0 ml-3">As a Graduate Research Assistant, I contribute to the <a href="https://hal.usc.edu/">HAL research project</a>. My work up to now has been focussed on exploring novel algorithmic solutions to achieve DeepLearning on hardware. Mostly I try to achieve training on DL accelerators with less amount of computations</dd>
+    <dd class="text-dark mb-0 ml-3"> <b> Jul 2018 - Oct 2019 &middot; University of Southern California, Los Angeles </b> </dd>
+    <dd class="text-dark mb-0 ml-3">As a Graduate Research Assistant, I contributed to the <a href="https://hal.usc.edu/">HAL research project</a>. My work was focussed on exploring novel algorithmic solutions to achieve Deep Learning on hardware accelerator. I came up with a idea of training a Neural Network on a logarithmic number system using approximate computations.</dd>
     
     <dt>
       <a class="text-primary" href="#"> <i class="fas fa-star"></i> <code>Hardware-Software co-design to accelerate Watermarking Algorithms</code></a>
