@@ -1,0 +1,55 @@
+name: Update Google Scholar Citations
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  update-citations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Update citation count
+        run: |
+          python scripts/update_citations.py
+        env:
+          SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git diff --exit-code index.html || echo "changed=true" >> $GITHUB_OUTPUT
+          if [ -f data/content.yml ]; then
+            git diff --exit-code data/content.yml || echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add index.html
+          if [ -f data/content.yml ]; then
+            git add data/content.yml
+          fi
+          git commit -m "🤖 Auto-update Google Scholar citation count"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
