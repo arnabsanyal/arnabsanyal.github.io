@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chameleon: Dynamic Format Adapter for Efficient Diffusion</title>
+  <meta name="description" content="Chameleon is a post-training quantization framework for diffusion models that keeps the bit-width fixed and chooses the number format per weight channel and per (layer, timestep bucket) activation tensor.">
+  <meta name="author" content="Arnab Sanyal, Sandeep Chinchali">
+  <meta name="keywords" content="post-training quantization, diffusion models, number formats, FP8, microscaling, MXFP8, NF4, SDXL, PixArt-alpha">
+  <meta property="og:title" content="Chameleon: Dynamic Format Adapter for Efficient Diffusion">
+  <meta property="og:description" content="At a fixed bit-width, choose the number format per tensor and per timestep. Best FID in all six backbone × bit-width settings on COCO-2014.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://arnabsanyal.github.io/iclr2027/chameleon.html">
+  <meta property="og:image" content="https://arnabsanyal.github.io/iclr2027/images/brand/chameleon-banner.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="images/brand/chameleon-avatar.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="images/brand/favicon-64.png">
+  <link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <style>
+    /* palette taken from the Chameleon logo */
+    :root {
+      --ink: #13212B;
+      --ink-2: #2A3B47;
+      --teal: #2BB3A0;
+      --teal-text: #17806F;   /* teal darkened for text contrast on white */
+      --lime: #B8D431;
+      --muted: #56646E;
+      --surface: #F4F7F7;
+    }
+    body { font-family: 'Noto Sans', sans-serif; color: #1f2a30; background: #fff; }
+    .title, .subtitle, .button, .tab-btn, .stat-num { font-family: 'Google Sans', 'Noto Sans', sans-serif; }
+    a { color: var(--teal-text); }
+    a:hover { color: var(--ink); }
+
+    /* ---------- hero ---------- */
+    .hero.brand { background: var(--ink); color: #EAF0F2; }
+    .hero.brand .hero-body { padding: 3rem 1.5rem 2.5rem; }
+    .brand-logo { width: 150px; height: 150px; display: block; margin: 0 auto 1.2rem; }
+    .publication-title { color: #fff !important; font-size: 2.75rem !important; line-height: 1.15; }
+    .publication-title .name { color: var(--teal); }
+    .publication-subtitle { color: #C9D6DB !important; font-size: 1.45rem !important; margin-top: .6rem !important; }
+    .publication-authors { margin-top: 1.1rem; font-size: 1.15rem; }
+    .publication-authors a { color: #fff; border-bottom: 1px solid rgba(43,179,160,.6); }
+    .publication-authors a:hover { color: var(--teal); }
+    .author-block { display: inline-block; margin: 0 .4rem; }
+    .affil { color: #A9B8BF; font-size: 1rem; margin-top: .25rem; }
+    .venue-tag {
+      display: inline-block; margin-top: .9rem; padding: .25rem .85rem; border-radius: 999px;
+      border: 1px solid var(--teal); color: var(--teal); font-weight: 600; font-size: .95rem;
+    }
+    .publication-links { margin-top: 1.4rem; }
+    .publication-links .button { margin: .25rem; background: #fff; color: var(--ink); border: none; font-weight: 600; }
+    .publication-links .button:hover { background: var(--teal); color: #fff; }
+    .publication-links .button[disabled] { background: var(--ink-2); color: #9FB0B8; opacity: 1; }
+    .soon { font-size: .72rem; font-weight: 500; margin-left: .35rem; opacity: .85; }
+
+    /* ---------- layout ---------- */
+    .section { padding: 3.5rem 1.5rem; }
+    .section.alt { background: var(--surface); }
+    .section-title { color: var(--ink) !important; text-align: center; margin-bottom: 1.5rem !important; }
+    .lead { font-size: 1.12rem; line-height: 1.75; }
+    .content.has-text-justified p, .content p { line-height: 1.75; }
+    .figure-img { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+    .figure-frame { background: #fff; border: 1px solid #E1E8EA; border-radius: 8px; padding: .75rem; }
+    .caption { color: var(--muted); font-size: .92rem; line-height: 1.55; margin-top: .7rem; }
+
+    /* ---------- TL;DR ---------- */
+    .tldr { border-left: 4px solid var(--teal); background: var(--surface); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; font-size: 1.08rem; }
+
+    /* ---------- teaser: baseline vs ours pairs ---------- */
+    .pairs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .pair { background: #fff; border: 1px solid #E1E8EA; border-radius: 8px; padding: .6rem; }
+    .pair-imgs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+    .pair figure { margin: 0; }
+    .pair img { width: 100%; height: auto; display: block; border-radius: 4px; aspect-ratio: 1 / 1; object-fit: cover; }
+    .pair figcaption { font-size: .82rem; text-align: center; margin-top: .3rem; color: var(--muted); }
+    .pair figcaption.ours { color: var(--teal-text); font-weight: 700; }
+    .pair-head { text-align: center; font-weight: 600; font-size: .9rem; margin-bottom: .45rem; color: var(--ink); }
+    @media (max-width: 900px) { .pairs { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; } }
+
+    /* ---------- stat tiles ---------- */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat { background: #fff; border: 1px solid #E1E8EA; border-radius: 8px; padding: 1rem; text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .stat-label { font-size: .85rem; color: var(--muted); margin-top: .35rem; line-height: 1.4; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ---------- phases / routing ---------- */
+    .phases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .phase { background: #fff; border: 1px solid #E1E8EA; border-top: 4px solid var(--teal); border-radius: 8px; padding: 1rem; }
+    .phase h4 { font-family: 'Google Sans', sans-serif; font-weight: 700; margin-bottom: .35rem; color: var(--ink); }
+    .phase .fmt { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; color: var(--teal-text); }
+    .phase p { font-size: .9rem; color: var(--muted); margin-top: .4rem; line-height: 1.5; }
+    .phase.p1 { border-top-color: #9C7BC0; } .phase.p2 { border-top-color: #E0A25A; }
+    .phase.p3 { border-top-color: var(--lime); } .phase.p4 { border-top-color: #C0473A; }
+    @media (max-width: 900px) { .phases { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .phases { grid-template-columns: 1fr; } }
+
+    /* ---------- tabs ---------- */
+    .tabbar { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-bottom: 1.25rem; }
+    .tab-btn {
+      border: 1px solid #C9D4D8; background: #fff; color: var(--ink); border-radius: 999px;
+      padding: .45rem 1rem; cursor: pointer; font-size: .95rem;
+    }
+    .tab-btn:hover { border-color: var(--teal); }
+    .tab-btn[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .tab-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }
+    .tab-panel[hidden] { display: none; }
+
+    /* ---------- qualitative grids ---------- */
+    .qual { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .qual figure { margin: 0; }
+    .qual img { width: 100%; height: auto; display: block; border-radius: 6px; }
+    .qual figcaption { text-align: center; margin-top: .45rem; font-weight: 600; font-size: .92rem; color: var(--muted); }
+    .qual figcaption.ours { color: var(--teal-text); }
+    @media (max-width: 760px) { .qual { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; } }
+
+    /* ---------- tables ---------- */
+    .table-container { margin: 0 auto; }
+    table.results { font-size: .95rem; margin: 0 auto; }
+    table.results th { color: var(--ink); white-space: nowrap; }
+    table.results td.num, table.results th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.results tr.ours td { background: #E9F6F3; }
+    table.results tr.ref td { color: var(--muted); }
+    table.results td.group { font-weight: 600; color: var(--ink); vertical-align: middle; white-space: nowrap; }
+    table.results .setup { display: block; font-weight: 400; font-size: .8rem; color: var(--muted); }
+    table.results b { color: var(--ink); }
+
+    /* ---------- bibtex ---------- */
+    #BibTeX pre { position: relative; white-space: pre-wrap; background: var(--surface); border-radius: 8px; padding-right: 5rem; }
+    #copy-bib { position: absolute; top: .6rem; right: .6rem; }
+    .footer { padding: 2.5rem 1.5rem; background: var(--ink); color: #A9B8BF; }
+    .footer a { color: #fff; }
+    .footer a:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+
+<!-- ============================ Header ============================ -->
+<section class="hero brand">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <img class="brand-logo" src="images/brand/chameleon-logo.svg" alt="Chameleon logo: a teal chameleon on a branch whose tail curls into a spiral">
+      <h1 class="title is-1 publication-title"><span class="name">Chameleon</span>: Dynamic Format Adapter<br>for Efficient Diffusion</h1>
+
+      <div class="publication-authors">
+        <span class="author-block"><a href="https://arnabsanyal.github.io/" target="_blank" rel="noopener">Arnab Sanyal</a></span>
+        <span class="author-block">Sandeep Chinchali</span>
+      </div>
+      <div class="affil">The University of Texas at Austin</div>
+      <span class="venue-tag">Under review at ICLR 2027</span>
+
+      <div class="publication-links">
+        <!-- Replace each disabled span with an <a href="..."> button once the link exists. -->
+        <a href="https://arxiv.org/pdf/2609.33496" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+        </a>
+        <span class="button is-rounded" disabled title="Coming soon">
+          <span class="icon"><i class="fab fa-github"></i></span><span>Code</span><span class="soon">soon</span>
+        </span>
+        <a href="#BibTeX" class="button is-rounded">
+          <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TL;DR + teaser ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <p class="tldr">
+      <b>TL;DR</b> &mdash; Every diffusion PTQ method we compare against fixes the number format (almost always INT8)
+      and only tunes scales around it. Chameleon keeps the bit-width fixed and makes the <em>format itself</em>
+      a choice, made per weight channel and per (layer, timestep bucket) activation tensor from two cheap statistics.
+      It gets the best FID in all six backbone &times; bit-width settings we test.
+    </p>
+
+    <div class="pairs" style="margin-top:2rem">
+      <div class="pair">
+        <div class="pair-head">SDXL &middot; UNet</div>
+        <div class="pair-imgs">
+          <figure><img src="images/qdiffusion_w4a8.jpg" alt="SDXL fire hydrant image quantized with Q-Diffusion at W4A8" loading="lazy"><figcaption>Q-Diffusion</figcaption></figure>
+          <figure><img src="images/chameleon_sdxl_w4a8.jpg" alt="SDXL fire hydrant image quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="pair-head">SDXL-Turbo &middot; 1-step</div>
+        <div class="pair-imgs">
+          <figure><img src="images/mixdq_w4a8.jpg" alt="SDXL-Turbo fire hydrant image quantized with MixDQ at W4A8" loading="lazy"><figcaption>MixDQ</figcaption></figure>
+          <figure><img src="images/chameleon_lcm_w4a8.jpg" alt="SDXL-Turbo fire hydrant image quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="pair-head">PixArt-&alpha; &middot; DiT</div>
+        <div class="pair-imgs">
+          <figure><img src="images/qdit_w4a8.jpg" alt="PixArt-alpha fire hydrant image quantized with Q-DiT at W4A8" loading="lazy"><figcaption>Q-DiT</figcaption></figure>
+          <figure><img src="images/chameleon_dit_w4a8.jpg" alt="PixArt-alpha fire hydrant image quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+        </div>
+      </div>
+    </div>
+    <p class="caption has-text-centered">
+      Each per-architecture PTQ baseline next to Chameleon at 4-bit weights (W4A8), from the COCO-2014 caption
+      &ldquo;An old city fire hydrant has &lsquo;Love was found here&rsquo; painted on it.&rdquo;
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Abstract ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            A very popular way to enable image generation on memory-constrained accelerators using modern
+            spatiotemporal generative models is post-training quantization (PTQ). However, every existing diffusion
+            PTQ scheme shares an unstated commitment: the <em>number format</em> is fixed in advance, and only the scale,
+            zero point, or the per-layer bit-width is allowed to move. This is unfortunate, because at a fixed bit-width
+            the best format depends on the distribution being encoded, and that distribution differs from tensor to
+            tensor: across weight channels, across layers, and &ndash; in a denoising model &ndash; along the diffusion
+            timestep, where activations slide from heavy-tailed and noise-dominated at <i>t</i>&rarr;<i>T</i> to tightly
+            clustered and structured at <i>t</i>&rarr;0. One format for the whole network is therefore mispriced for most
+            of its tensors, and re-tuning a scale cannot repair a format mismatch.
+          </p>
+          <p>
+            In this work, we propose a PTQ framework, which we call <b>Chameleon</b>, that holds the bit-width fixed and
+            treats the number format itself as a discrete variable, chosen per weight channel and per
+            (layer, timestep bucket) activation tensor. Chameleon draws activation formats from a palette of
+            {INT8, FP8 E4M3, FP8 E5M2, MXFP8, MXINT8} and weight formats from {INT8, MXINT8} at 8 bits or
+            {INT4, NF4, FP4 E2M1, MXINT4, MXFP4} at 4 bits, choosing activation formats ahead of time from two cheap
+            statistics &ndash; empirical activation kurtosis and closed-form diffusion SNR
+            &alpha;&#772;<sub><i>t</i></sub>/(1&minus;&alpha;&#772;<sub><i>t</i></sub>) &ndash; stored in a
+            per-(layer, timestep bucket) lookup table, and weight formats offline by reconstruction error. An
+            architectural fork adapts the same selection layer to each model family, so each model exercises the
+            palette as far as its own statistics warrant: weights and per-(layer, bucket) activations on multi-step
+            SDXL, weights alone where a single sampler step leaves no timestep axis.
+          </p>
+          <p>
+            We evaluate Chameleon across three diffusion regimes &ndash; multi-step SDXL, single-step SDXL-Turbo, and the
+            PixArt-&alpha; Diffusion Transformer &ndash; on COCO-2014. Chameleon achieves the best FID for all six
+            backbone &times; bit-width settings, while preserving semantic alignment with the text prompts (CLIP within
+            0.24 of the FP16 reference in every setting, and the best of all quantized methods at W4A8). Adapting the
+            format, rather than only its scale, recovers distributional fidelity at 4-bit weights while holding prompt
+            adherence at the FP16 level.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Key idea ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Why change the format, not just the scale?</h2>
+    <div class="content lead">
+      <p>
+        A trained network's weights are static, so their statistics can be measured once, offline, per channel.
+        Activations are different: the input to a layer depends on the timestep, and its distribution changes
+        dramatically along the schedule. Early in sampling (<i>t</i>&rarr;<i>T</i>) activations are noise-dominated and
+        heavy-tailed, with kurtosis &kappa; above 5; near the end (<i>t</i>&rarr;0) they carry structured signal and
+        &kappa; often drops below 3. Re-scaling INT8 cannot make it tolerate heavy tails, and re-scaling FP8 E5M2
+        cannot give its logarithmic bins the density to render fine texture. The fix is to change formats along the schedule.
+      </p>
+    </div>
+
+    <div class="phases">
+      <div class="phase p1">
+        <h4>Phase 1 &middot; heavy tails</h4>
+        <div class="fmt">FP8 E5M2</div>
+        <p>&kappa; &gt; 5 or SNR &lt; 0.2. Noise-dominated activations need dynamic range.</p>
+      </div>
+      <div class="phase p2">
+        <h4>Phase 2 &middot; settling</h4>
+        <div class="fmt">FP8 E4M3</div>
+        <p>Everything in between: more precision, less range.</p>
+      </div>
+      <div class="phase p3">
+        <h4>Phase 3 &middot; clean signal</h4>
+        <div class="fmt">INT8-asym</div>
+        <p>&kappa; &le; 3 and SNR &gt; 2. Near-Gaussian, tightly clustered values.</p>
+      </div>
+      <div class="phase p4">
+        <h4>UNet shortcuts</h4>
+        <div class="fmt">MXFP8 E4M3</div>
+        <p>Skip concatenations span a 58&times; peak-to-median channel range at the median layer (up to 163&times;); one shared exponent per 32 values absorbs it.</p>
+      </div>
+    </div>
+
+    <p class="caption has-text-centered" style="margin-top:1rem">
+      The routing rule, applied per (layer, timestep bucket). The shortcut rule is checked first; the thresholds
+      (&kappa;: 3, 5; SNR: 0.2, 2) are fixed a priori and shared across every model, not tuned per model.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Method ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">The Chameleon framework</h2>
+    <div class="figure-frame">
+      <img class="figure-img" src="images/chameleon_schematic.png" loading="lazy"
+           alt="Chameleon framework diagram: offline analysis builds an adaptive weight palette and a per-layer, per-timestep-bucket activation format lookup table; a load-time architectural fork routes to UNet, few-step distilled, or diffusion transformer execution paths; each path runs a fake-quantization dispatch.">
+    </div>
+    <p class="caption">
+      <b>Figure 2.</b> Offline, a one-pass calibrator accumulates per-(layer, bucket) activation moments for the
+      empirical kurtosis &kappa;<sub><i>l</i></sub>(<i>t</i>), while the diffusion SNR(<i>t</i>) is read from the noise
+      schedule. The router writes the chosen format into an integer lookup table; weights are selected offline.
+      At inference, one fake-quantization module reads the LUT per layer per step and dispatches to the matching routine.
+    </p>
+
+    <div class="content" style="margin-top:1.75rem">
+      <div class="columns">
+        <div class="column">
+          <h4 class="title is-5">Activations: a per-(layer, bucket) lookup table</h4>
+          <p>
+            Calibration is a single pass over 128 COCO prompts with the schedule split into <i>B</i>&nbsp;=&nbsp;10
+            timestep buckets. Each instrumented layer keeps seven running scalars per bucket (power sums plus min/max),
+            from which kurtosis follows in closed form. SNR costs nothing: it is read off the noise schedule with no
+            forward pass. At inference the format choice is one indexed read per layer per step.
+          </p>
+        </div>
+        <div class="column">
+          <h4 class="title is-5">Weights: per-channel format by SQNR</h4>
+          <p>
+            Weights are static, so selection runs offline at finer grain. Each output channel is round-tripped through
+            every format in the palette, and the format with the highest signal-to-quantization-noise ratio wins.
+            Even within one SDXL conv layer, weight kurtosis varies enough across output channels that a tensor-wise
+            choice would be a compromise. The metadata cost is one byte per output channel, about 1&nbsp;MB across the UNet.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Architectural fork ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">One selection layer, three model families</h2>
+    <p class="content lead has-text-centered">
+      A model loader inspects the topology once and forks to a UNet, few-step, or DiT path. The format choice sits
+      underneath the machinery each prior method already uses, so Chameleon composes with them rather than replacing them.
+    </p>
+
+    <div class="tabbar" role="tablist" aria-label="Execution paths">
+      <button class="tab-btn" role="tab" id="tab-unet" aria-controls="panel-unet" aria-selected="true">UNet (SDXL)</button>
+      <button class="tab-btn" role="tab" id="tab-few" aria-controls="panel-few" aria-selected="false" tabindex="-1">Few-step (SDXL-Turbo)</button>
+      <button class="tab-btn" role="tab" id="tab-dit" aria-controls="panel-dit" aria-selected="false" tabindex="-1">DiT (PixArt-&alpha;)</button>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-unet" aria-labelledby="tab-unet">
+      <div class="figure-frame">
+        <img class="figure-img" src="images/unet_schematic.png" loading="lazy"
+             alt="SDXL UNet execution path showing per-bucket activation format shares, the MXFP8 shortcut topology rule, and per-output-channel weight format selection.">
+      </div>
+      <p class="caption">
+        <b>UNet path.</b> Activations follow the routing rule with static, ahead-of-time scales
+        (Q-Diffusion style). The conv layers right after each skip concatenation
+        (<code>up_blocks.*.resnets.*.conv1</code>) are pinned to MXFP8 E4M3. SDXL uses every axis of the palette:
+        per-channel weights, per-layer activations, three temporal regimes, and the topological MXFP8 pin.
+      </p>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-few" aria-labelledby="tab-few" hidden>
+      <div class="content lead">
+        <p>
+          A one-step sampler has no timestep axis to route over, so this path inverts the division of labor:
+          <b>Chameleon owns the weights and inherits the activations.</b> Activations keep MixDQ's calibrated static
+          per-tensor scales and mixed-precision assignment unchanged. Weights are replaced by Chameleon's adaptive
+          palette: per-channel SQNR selection at 8 bits, and a per-layer (group size, format) search over
+          {32, 64, 128, 192, 288} &times; {INT4-asym, NF4, FP4 E2M1, MXINT4, MXFP4 E2M1} at 4 bits.
+        </p>
+        <p>
+          Because the activations are MixDQ's own, the margin over MixDQ (0.50 FID at W8A8, 3.21 at W4A8) is due to the
+          weight palette alone. MixDQ's BOS-aware bypass also becomes unnecessary, which removes its batch-size-one
+          inference constraint.
+        </p>
+      </div>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-dit" aria-labelledby="tab-dit" hidden>
+      <div class="figure-frame">
+        <img class="figure-img" src="images/dit_schematic.png" loading="lazy"
+             alt="PixArt-alpha DiT execution path showing FP8 E5M2 selected in 97 to 100 percent of linears in every bucket, dynamic micro-scaling, and a joint group-size and format weight search.">
+      </div>
+      <p class="caption">
+        <b>DiT path.</b> DiTs have no UNet-style shortcut concatenations, so the MX pin is dropped. Weights use a
+        joint (group size <i>g</i>, format <i>f</i>) search with input-aware SQNR; activations take the format from the
+        LUT and compute the scale dynamically per sample. With the same thresholds, PixArt-&alpha; lands on FP8 E5M2 in
+        97&ndash;100% of its 282 linears in every bucket: DiT activations stay heavy-tailed along the whole schedule.
+        At 4 bits the search settles on <i>g</i>&nbsp;=&nbsp;32 everywhere, with NF4 chosen for 69 of 282 linears.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Results ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Results</h2>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">6 / 6</div><div class="stat-label">backbone &times; bit-width settings with the best FID</div></div>
+      <div class="stat"><div class="stat-num">&minus;7.0</div><div class="stat-label">FID vs. Q-Diffusion on SDXL at W4A8 (21.41 &rarr; 14.43)</div></div>
+      <div class="stat"><div class="stat-num">&le; 0.24</div><div class="stat-label">CLIP gap to the FP16 reference in every setting</div></div>
+      <div class="stat"><div class="stat-num">&lt; 1 h</div><div class="stat-label">calibration for all three backbones on one A100, no gradients</div></div>
+    </div>
+
+    <div class="table-container">
+      <table class="table results is-narrow is-hoverable">
+        <thead>
+          <tr><th>Backbone</th><th>Method</th><th>Bits</th><th class="num">FID &darr;</th><th class="num">CLIP &uarr;</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ref"><td class="group" rowspan="7">SDXL<span class="setup">50 steps, CFG 7.5, 1024 &times; 1024</span></td><td>FP16</td><td>W16A16</td><td class="num">16.16</td><td class="num">26.88</td></tr>
+          <tr><td>Q-Diffusion</td><td>W8A8</td><td class="num">14.70</td><td class="num">26.77</td></tr>
+          <tr><td>PTQ4DM</td><td>W8A8</td><td class="num">14.65</td><td class="num">26.68</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W8A8</td><td class="num"><b>14.23</b></td><td class="num">26.70</td></tr>
+          <tr><td>Q-Diffusion</td><td>W4A8</td><td class="num">21.41</td><td class="num">26.27</td></tr>
+          <tr><td>PTQ4DM</td><td>W4A8</td><td class="num">21.82</td><td class="num">26.21</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W4A8</td><td class="num"><b>14.43</b></td><td class="num"><b>26.64</b></td></tr>
+
+          <tr class="ref"><td class="group" rowspan="5">SDXL-Turbo<span class="setup">1 step, no CFG, 512 &times; 512</span></td><td>FP16</td><td>W16A16</td><td class="num">21.63</td><td class="num">26.63</td></tr>
+          <tr><td>MixDQ</td><td>W8A8</td><td class="num">21.43</td><td class="num">26.64</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W8A8</td><td class="num"><b>20.93</b></td><td class="num">26.62</td></tr>
+          <tr><td>MixDQ</td><td>W4A8</td><td class="num">24.50</td><td class="num">25.88</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W4A8</td><td class="num"><b>21.29</b></td><td class="num"><b>26.85</b></td></tr>
+
+          <tr class="ref"><td class="group" rowspan="5">PixArt-&alpha;<span class="setup">20 steps, CFG 4.5, 1024 &times; 1024</span></td><td>FP16</td><td>W16A16</td><td class="num">27.63</td><td class="num">25.99</td></tr>
+          <tr><td>Q-DiT</td><td>W8A8</td><td class="num">27.69</td><td class="num">25.99</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W8A8</td><td class="num"><b>24.33</b></td><td class="num">25.81</td></tr>
+          <tr><td>Q-DiT</td><td>W4A8</td><td class="num">23.53</td><td class="num">25.73</td></tr>
+          <tr class="ours"><td><b>Chameleon</b></td><td>W4A8</td><td class="num"><b>22.24</b></td><td class="num"><b>26.09</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption has-text-centered">
+      COCO-2014, 24,576 captions, one image each. Clean-FID against the full val2014 set; CLIP-score with ViT-L/14
+      (cosine &times; 100). Best FID per backbone, and best CLIP at W4A8, in bold. Resolutions and samplers differ per
+      family, so FID is comparable within a backbone but not across. All numbers use fake quantization.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Qualitative ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Qualitative comparison at W4A8</h2>
+
+    <div class="tabbar" role="tablist" aria-label="Backbone">
+      <button class="tab-btn" role="tab" id="tab-q-sdxl" aria-controls="panel-q-sdxl" aria-selected="true">SDXL</button>
+      <button class="tab-btn" role="tab" id="tab-q-turbo" aria-controls="panel-q-turbo" aria-selected="false" tabindex="-1">SDXL-Turbo</button>
+      <button class="tab-btn" role="tab" id="tab-q-dit" aria-controls="panel-q-dit" aria-selected="false" tabindex="-1">PixArt-&alpha;</button>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-q-sdxl" aria-labelledby="tab-q-sdxl">
+      <div class="qual">
+        <figure><img src="images/unquantized_sdxl_grid.jpg" alt="SDXL FP16 reference images for four prompts" loading="lazy"><figcaption>FP16 reference</figcaption></figure>
+        <figure><img src="images/sdxl_baseline_w4a8_grid.jpg" alt="SDXL images quantized with Q-Diffusion at W4A8" loading="lazy"><figcaption>Q-Diffusion</figcaption></figure>
+        <figure><img src="images/sdxl_chameleon_w4a8_grid.jpg" alt="SDXL images quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+      </div>
+    </div>
+    <div class="tab-panel" role="tabpanel" id="panel-q-turbo" aria-labelledby="tab-q-turbo" hidden>
+      <div class="qual">
+        <figure><img src="images/unquantized_lcm_grid.jpg" alt="SDXL-Turbo FP16 reference images for four prompts" loading="lazy"><figcaption>FP16 reference</figcaption></figure>
+        <figure><img src="images/lcm_baseline_w4a8_grid.jpg" alt="SDXL-Turbo images quantized with MixDQ at W4A8" loading="lazy"><figcaption>MixDQ</figcaption></figure>
+        <figure><img src="images/lcm_chameleon_w4a8_grid.jpg" alt="SDXL-Turbo images quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+      </div>
+    </div>
+    <div class="tab-panel" role="tabpanel" id="panel-q-dit" aria-labelledby="tab-q-dit" hidden>
+      <div class="qual">
+        <figure><img src="images/unquantized_dit_grid.jpg" alt="PixArt-alpha FP16 reference images for four prompts" loading="lazy"><figcaption>FP16 reference</figcaption></figure>
+        <figure><img src="images/dit_baseline_w4a8_grid.jpg" alt="PixArt-alpha images quantized with Q-DiT at W4A8" loading="lazy"><figcaption>Q-DiT</figcaption></figure>
+        <figure><img src="images/dit_chameleon_w4a8_grid.jpg" alt="PixArt-alpha images quantized with Chameleon at W4A8" loading="lazy"><figcaption class="ours">Chameleon</figcaption></figure>
+      </div>
+    </div>
+    <p class="caption has-text-centered">
+      Four prompts per backbone, in reading order: a cherry-red convertible, an orange tabby cat, a golden retriever
+      puppy, and a black sports car. Seeds are fixed across columns, so the same prompt starts from the same latent.
+    </p>
+
+    <div class="columns is-centered" style="margin-top:1.5rem">
+      <div class="column is-three-quarters">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Backbone</th><th class="num">FP16</th><th class="num">PTQ baseline</th><th class="num">Chameleon</th></tr></thead>
+            <tbody>
+              <tr><td>SDXL</td><td class="num">522</td><td class="num">605 <small>(Q-Diffusion)</small></td><td class="num"><b>662</b></td></tr>
+              <tr><td>SDXL-Turbo</td><td class="num">439</td><td class="num">605 <small>(MixDQ)</small></td><td class="num"><b>725</b></td></tr>
+              <tr><td>PixArt-&alpha;</td><td class="num">1287</td><td class="num">1030 <small>(Q-DiT)</small></td><td class="num"><b>1057</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption has-text-centered">
+          High-frequency detail, measured as the variance of the Laplacian over 400 prompt-matched images per
+          configuration (higher = more detail). Chameleon keeps more detail than the PTQ baseline on every backbone.
+          The FP16 column is a reference, not a target to exceed.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Ablations ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">What each piece is worth</h2>
+    <div class="columns">
+      <div class="column">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Routing (SDXL W4A8)</th><th class="num">FID &darr;</th><th class="num">&Delta;</th></tr></thead>
+            <tbody>
+              <tr class="ours"><td>&kappa; and SNR (shipped)</td><td class="num"><b>19.39</b></td><td class="num">&ndash;</td></tr>
+              <tr><td>&kappa; gates perturbed (3,5)&rarr;(3.5,5.5)</td><td class="num">19.41</td><td class="num">+0.02</td></tr>
+              <tr><td>&kappa; only (SNR gate off)</td><td class="num">19.60</td><td class="num">+0.21</td></tr>
+              <tr><td>SNR only (&kappa; frozen)</td><td class="num">19.68</td><td class="num">+0.29</td></tr>
+              <tr><td>no routing, FP8 E4M3 everywhere</td><td class="num">20.29</td><td class="num">+0.90</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="column">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Palette (SDXL W4A8)</th><th class="num">FID &darr;</th><th class="num">&Delta;</th></tr></thead>
+            <tbody>
+              <tr class="ours"><td>full palette (shipped)</td><td class="num"><b>19.39</b></td><td class="num">&ndash;</td></tr>
+              <tr><td>drop NF4</td><td class="num">19.46</td><td class="num">+0.07</td></tr>
+              <tr><td>drop MXFP8 (shortcut rule off)</td><td class="num">19.54</td><td class="num">+0.15</td></tr>
+              <tr><td>drop MXFP4 E2M1</td><td class="num">19.77</td><td class="num">+0.38</td></tr>
+              <tr><td>INT8-asym everywhere</td><td class="num">180.51</td><td class="num">+161.12</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="caption has-text-centered">
+      5,000-image ablations on SDXL at W4A8 (a separate run, so the baseline differs from the main table). Two
+      independent calibrations of the same configuration differ by 0.04 FID. Routing is worth 0.90 FID over the best
+      single fixed format, the two statistics carry complementary information, and moving the thresholds barely
+      changes FID. Forcing INT8 everywhere collapses output entirely; no choice of INT8 scale recovers it.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Limitations ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Scope and limitations</h2>
+        <div class="content">
+          <ul>
+            <li><b>No efficiency claims yet.</b> All results use fake quantization on an A100. The numbers describe what
+              the format assignment costs in fidelity; latency and memory savings on native FP8 and MX kernels are future work.</li>
+            <li><b>Hardware support.</b> FP8 and MX formats need Hopper- or Blackwell-class accelerators; on INT-only NPUs
+              the palette reduces to its INT members. Per-channel mixed formats would run as same-format sub-GEMMs after a
+              channel permutation, or with weights de-quantized in registers.</li>
+            <li><b>Image generation only.</b> Video DiTs and sub-4-bit weights (which would need quantization-aware
+              training) are out of scope.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ BibTeX ============================ -->
+<section class="section alt" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3">BibTeX</h2>
+<pre><button id="copy-bib" class="button is-small" type="button">Copy</button><code id="bibtex">@misc{sanyal2026chameleon,
+  title        = {Chameleon: Dynamic Format Adapter for Efficient Diffusion},
+  author       = {Sanyal, Arnab and Chinchali, Sandeep},
+  year         = {2026},
+  howpublished = {Under review at the International Conference on Learning Representations (ICLR) 2027}
+}</code></pre>
+  </div>
+</section>
+
+<!-- ============================ Footer ============================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p><a href="../"><i class="fas fa-home"></i> Back to Arnab Sanyal's homepage</a></p>
+      <p class="is-size-7">
+        Page layout adapted from the
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page Template</a>,
+        based on the <a href="https://nerfies.github.io" target="_blank" rel="noopener">Nerfies</a> project page, licensed under
+        <a rel="license noopener" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // BibTeX copy
+  document.getElementById('copy-bib').addEventListener('click', function () {
+    var btn = this, text = document.getElementById('bibtex').innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  // Accessible tabs: each [role=tablist] controls the panels named by its buttons' aria-controls.
+  document.querySelectorAll('[role="tablist"]').forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on);
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        var next = tabs[(i + d + tabs.length) % tabs.length];
+        select(next); next.focus(); e.preventDefault();
+      });
+    });
+  });
+</script>
+</body>
+</html>

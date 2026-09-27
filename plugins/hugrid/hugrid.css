@@ -161,3 +161,17 @@
   .og-details h3 { font-size: 32px; }
 
 }
+
+/* Academicons has no OpenReview glyph. The logo is used as a mask filled with
+   currentColor, so it is one-colour like the other ai-* icons and inverts with
+   the .button hover state (dark square -> white square). */
+.ai.ai-openreview {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	vertical-align: -0.125em;
+	background-color: currentColor;
+	-webkit-mask: url("../../images/icons/openreview.png") center / contain no-repeat;
+	mask: url("../../images/icons/openreview.png") center / contain no-repeat;
+}
+.ai.ai-openreview::before { content: ""; }
