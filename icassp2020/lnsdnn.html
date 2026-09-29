@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neural Network Training with Approximate Logarithmic Computations (lnsdnn)</title>
+  <meta name="description" content="End-to-end training and inference of neural networks in the logarithmic number system, with multiplications replaced by additions and log-domain addition approximated by a small look-up table or bit-shifts.">
+  <meta name="author" content="Arnab Sanyal, Peter A. Beerel, Keith M. Chugg">
+  <meta name="keywords" content="logarithmic number system, LNS, deep neural networks, approximate computation, fixed-point training, look-up table, bit-shift, ICASSP 2020">
+  <meta property="og:title" content="Neural Network Training with Approximate Logarithmic Computations">
+  <meta property="og:description" content="Train an MLP entirely in the log domain: multiplies become adds, and a 20-entry table approximates log-domain addition. 16-bit fixed-point log training lands within about 1% of floating point.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://arnabsanyal.github.io/icassp2020/lnsdnn.html">
+  <meta property="og:image" content="https://arnabsanyal.github.io/icassp2020/images/brand/lnsdnn-card.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="images/brand/favicon.ico" sizes="any">
+  <link rel="icon" href="images/brand/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <style>
+    /* palette taken from the lnsdnn logo kit */
+    :root {
+      --ink: #1F3A5F;         /* navy */
+      --ink-2: #2E4E78;
+      --night: #12161F;
+      --accent: #F2A541;      /* orange on dark */
+      --accent-text: #A6530A; /* orange darkened for text contrast on white */
+      --muted: #56606E;
+      --surface: #F5F7FA;
+    }
+    body { font-family: 'Noto Sans', sans-serif; color: #1c2430; background: #fff; }
+    .title, .subtitle, .button, .tab-btn, .stat-num { font-family: 'Google Sans', 'Noto Sans', sans-serif; }
+    a { color: var(--accent-text); }
+    a:hover { color: var(--ink); }
+
+    /* ---------- hero ---------- */
+    .hero.brand { background: var(--ink); color: #EAF0F5; }
+    .hero.brand .hero-body { padding: 3rem 1.5rem 2.5rem; }
+    .brand-lockup { margin: 0 auto 1.4rem; }
+    .brand-lockup img { width: 100%; max-width: 560px; height: auto; display: block; margin: 0 auto; }
+    .paper-title { color: #fff; font-family: 'Google Sans', sans-serif; font-size: 1.6rem; line-height: 1.3; font-weight: 600; }
+    .publication-authors { margin-top: 1rem; font-size: 1.15rem; }
+    .publication-authors a { color: #fff; border-bottom: 1px solid rgba(242,165,65,.6); }
+    .publication-authors a:hover { color: var(--accent); }
+    .author-block { display: inline-block; margin: 0 .4rem; }
+    .affil { color: #B3C0CF; font-size: 1rem; margin-top: .25rem; }
+    .venue-tag {
+      display: inline-block; margin-top: .9rem; padding: .25rem .85rem; border-radius: 999px;
+      border: 1px solid var(--accent); color: var(--accent); font-weight: 600; font-size: .95rem;
+    }
+    .publication-links { margin-top: 1.4rem; }
+    .publication-links .button { margin: .25rem; background: #fff; color: var(--ink); border: none; font-weight: 600; }
+    .publication-links .button:hover { background: var(--accent); color: var(--night); }
+
+    /* ---------- layout ---------- */
+    .section { padding: 3.5rem 1.5rem; }
+    .section.alt { background: var(--surface); }
+    .section-title { color: var(--ink) !important; text-align: center; margin-bottom: 1.5rem !important; }
+    .lead { font-size: 1.12rem; line-height: 1.75; }
+    .content.has-text-justified p, .content p { line-height: 1.75; }
+    .figure-img { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+    .figure-frame { background: #fff; border: 1px solid #E1E6EE; border-radius: 8px; padding: .75rem; }
+    .caption { color: var(--muted); font-size: .92rem; line-height: 1.55; margin-top: .7rem; }
+    .math { font-family: 'Castoro', Georgia, serif; font-size: 1.08em; white-space: nowrap; }
+
+    /* ---------- TL;DR ---------- */
+    .tldr { border-left: 4px solid var(--accent); background: var(--surface); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; font-size: 1.08rem; }
+
+    /* ---------- stat tiles ---------- */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat { background: #fff; border: 1px solid #E1E6EE; border-radius: 8px; padding: 1rem; text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .stat-label { font-size: .85rem; color: var(--muted); margin-top: .35rem; line-height: 1.4; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ---------- operation cards ---------- */
+    .ops { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .op { background: #fff; border: 1px solid #E1E6EE; border-top: 4px solid var(--accent); border-radius: 8px; padding: 1rem; }
+    .op h4 { font-family: 'Google Sans', sans-serif; font-weight: 700; margin-bottom: .5rem; color: var(--ink); }
+    .op .eq { font-family: 'Castoro', Georgia, serif; font-size: 1.08rem; color: var(--night); line-height: 1.7; }
+    .op p { font-size: .9rem; color: var(--muted); margin-top: .5rem; line-height: 1.5; }
+    .op.easy { border-top-color: #4F8A5B; } .op.hard { border-top-color: #C0473A; }
+    @media (max-width: 900px) { .ops { grid-template-columns: 1fr; } }
+    .cards4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    @media (max-width: 760px) { .cards4 { grid-template-columns: 1fr; } }
+
+    /* ---------- tabs ---------- */
+    .tabbar { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-bottom: 1.25rem; }
+    .tab-btn {
+      border: 1px solid #C9D2DE; background: #fff; color: var(--ink); border-radius: 999px;
+      padding: .45rem 1rem; cursor: pointer; font-size: .95rem;
+    }
+    .tab-btn:hover { border-color: var(--accent); }
+    .tab-btn[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .tab-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    .tab-panel[hidden] { display: none; }
+    .curve { max-width: 620px; margin: 0 auto; }
+
+    /* ---------- tables ---------- */
+    .table-container { margin: 0 auto; }
+    table.results { font-size: .95rem; margin: 0 auto; }
+    table.results th { color: var(--ink); white-space: nowrap; text-align: center; vertical-align: bottom; }
+    table.results th.left, table.results td.left { text-align: left; }
+    table.results td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    table.results td.ref { color: var(--muted); }
+    table.results .hl { background: #FDF1DF; }
+    table.results b { color: var(--ink); }
+
+    /* ---------- code / bibtex ---------- */
+    pre.cmd { background: var(--night); color: #E3E9F1; border-radius: 8px; font-size: .88rem; }
+    #BibTeX pre { position: relative; white-space: pre-wrap; background: var(--surface); border-radius: 8px; padding-right: 5rem; }
+    #copy-bib { position: absolute; top: .6rem; right: .6rem; }
+    video { width: 100%; border-radius: 8px; background: #000; display: block; }
+    .footer { padding: 2.5rem 1.5rem; background: var(--ink); color: #B3C0CF; }
+    .footer a { color: #fff; }
+    .footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- ============================ Header ============================ -->
+<section class="hero brand">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h1 class="brand-lockup">
+        <img src="images/brand/lnsdnn-header-dark.svg" width="660" height="200"
+             alt="lnsdnn: Neural Network Training with Approximate Logarithmic Computations">
+      </h1>
+
+      <div class="publication-authors">
+        <span class="author-block"><a href="https://arnabsanyal.github.io/" target="_blank" rel="noopener">Arnab Sanyal</a>,</span>
+        <span class="author-block">Peter A. Beerel,</span>
+        <span class="author-block">Keith M. Chugg</span>
+      </div>
+      <div class="affil">Ming Hsieh Department of Electrical and Computer Engineering, University of Southern California</div>
+      <span class="venue-tag">ICASSP 2020</span>
+
+      <div class="publication-links">
+        <a href="https://doi.org/10.1109/ICASSP40776.2020.9053015" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="ai ai-ieee"></i></span><span>Paper</span>
+        </a>
+        <a href="https://arxiv.org/abs/1910.09876" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+        </a>
+        <a href="https://github.com/arnabsanyal/lnsdnn" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+        </a>
+        <a href="ieee_icassp_2020_nntalc.pdf" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="fas fa-person-chalkboard"></i></span><span>Slides</span>
+        </a>
+        <a href="#talk" class="button is-rounded">
+          <span class="icon"><i class="fas fa-video"></i></span><span>Talk</span>
+        </a>
+        <a href="https://towardsdatascience.com/neural-networks-training-with-approximate-logarithmic-computations-44516f32b15b" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="fab fa-medium"></i></span><span>Blog</span>
+        </a>
+        <a href="#BibTeX" class="button is-rounded">
+          <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TL;DR + teaser ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <p class="tldr">
+      <b>TL;DR</b> &mdash; Multipliers dominate the cost of the multiply-accumulate units that train neural networks.
+      In the logarithmic number system (LNS) a multiply is just an add, so we run <em>all</em> of training and inference
+      in the log domain and approximate the one hard part, log-domain addition, with a 20-entry look-up table or plain
+      bit-shifts. With 16-bit fixed-point words, the log-domain network lands within about 1% of floating point on four
+      image datasets.
+    </p>
+
+    <div class="columns is-centered" style="margin-top:2rem">
+      <div class="column is-four-fifths">
+        <div class="figure-frame">
+          <img class="figure-img" src="images/bitshift_curve.png" width="1200" height="704" loading="lazy"
+               alt="Plot of the exact log-domain correction terms Delta-plus and Delta-minus against d, with a 20-entry look-up table at resolution one half and the bit-shift approximation overlaid as step functions.">
+        </div>
+        <p class="caption has-text-centered">
+          <b>Figure 1.</b> The correction terms &Delta;<sub>+</sub>(<i>d</i>) and &Delta;<sub>&minus;</sub>(<i>d</i>) that
+          make log-domain addition hard, with the look-up table (<i>r</i>&nbsp;=&nbsp;&frac12;) and bit-shift
+          approximations that replace them.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Abstract ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            The high computational complexity associated with training deep neural networks limits online and real-time
+            training on edge devices. This paper proposed an end-to-end training and inference scheme that eliminates
+            multiplications by approximate operations in the log-domain which has the potential to significantly reduce
+            implementation complexity. We implement the entire training procedure in the log-domain, with fixed-point data
+            representations. This training procedure is inspired by hardware-friendly approximations of log-domain addition
+            which are based on look-up tables and bit-shifts. We show that our 16-bit log-based training can achieve
+            classification accuracy within approximately 1% of the equivalent floating-point baselines for a number of
+            commonly used datasets.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LNS ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">In the log domain, multiplying is the easy part</h2>
+    <div class="content lead">
+      <p>
+        LNS stores a real number <i>v</i> as the base-2 logarithm of its magnitude, <span class="math"><i>V</i> = log<sub>2</sub>|<i>v</i>|</span>,
+        plus its sign <i>s<sub>v</sub></i>. Multiplication and exponentiation get cheaper; addition gets harder, because
+        the result needs a correction term that depends on how far apart the two operands are.
+      </p>
+    </div>
+
+    <div class="ops">
+      <div class="op easy">
+        <h4>Multiply &rarr; add</h4>
+        <div class="eq"><i>U</i> = <i>X</i> + <i>Y</i></div>
+        <p>The output sign is the XNOR of the input signs. No multiplier needed.</p>
+      </div>
+      <div class="op hard">
+        <h4>Add &rarr; max plus a correction</h4>
+        <div class="eq"><i>Z</i> = max(<i>X</i>, <i>Y</i>) + &Delta;<sub>&plusmn;</sub>(|<i>X</i> &minus; <i>Y</i>|)</div>
+        <p>
+          &Delta;<sub>+</sub>(<i>d</i>) = log<sub>2</sub>(1 + 2<sup>&minus;<i>d</i></sup>) when the signs match,
+          &Delta;<sub>&minus;</sub>(<i>d</i>) = log<sub>2</sub>(1 &minus; 2<sup>&minus;<i>d</i></sup>) when they differ.
+          This is the term to approximate.
+        </p>
+      </div>
+      <div class="op easy">
+        <h4>Exponentiate &rarr; multiply</h4>
+        <div class="eq"><i>w</i> = <i>x</i><sup><i>y</i></sup> &nbsp;&harr;&nbsp; <i>W</i> = <i>y</i><i>X</i></div>
+        <p>For a positive base <i>x</i>; used for the soft-max. Subtraction is addition with the second sign flipped.</p>
+      </div>
+    </div>
+
+    <div class="columns is-centered" style="margin-top:2rem">
+      <div class="column is-half">
+        <div class="figure-frame">
+          <img class="figure-img" src="images/lns_wordstruc.png" width="432" height="157" loading="lazy"
+               alt="A log-domain fixed-point word: a sign bit and qi integer bits and qf fraction bits holding log2 of the magnitude, followed by the sign bit s_x of the number.">
+        </div>
+        <p class="caption has-text-centered">
+          A fixed-point LNS word: log<sub>2</sub>|<i>x</i>| as a signed number with <i>q<sub>i</sub></i> integer and
+          <i>q<sub>f</sub></i> fraction bits, plus the sign bit <i>s<sub>x</sub></i>, for
+          <i>W</i><sub>log</sub> = 2 + <i>q<sub>i</sub></i> + <i>q<sub>f</sub></i> bits in total.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Approximating Delta ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Two cheap approximations of log-domain addition</h2>
+    <p class="content lead has-text-centered">
+      Training is already noisy (stochastic gradients, finite precision), so the question is how crude the &Delta;
+      approximation can get before accuracy suffers.
+    </p>
+    <div class="cards4">
+      <div class="op">
+        <h4>Look-up table</h4>
+        <p style="font-size:1rem">
+          Sample &Delta;<sub>&plusmn;</sub>(<i>d</i>) over the range [0, <i>d</i><sub>max</sub>] at resolution <i>r</i>,
+          i.e. 1/<i>r</i> points per unit interval, for a table of <i>d</i><sub>max</sub>/<i>r</i> entries.
+          Sweeping both, <i>d</i><sub>max</sub>&nbsp;=&nbsp;10 and <i>r</i>&nbsp;=&nbsp;&frac12; were enough:
+          <b>a 20-entry table</b> for every operation. The soft-max proved more sensitive and uses a 640-entry table
+          (<i>r</i>&nbsp;=&nbsp;1/64).
+        </p>
+      </div>
+      <div class="op">
+        <h4>Bit-shifts</h4>
+        <p style="font-size:1rem">
+          Using ln(1 &plusmn; <i>x</i>) &asymp; &plusmn;<i>x</i> for small <i>x</i>, the corrections become powers of two:
+          &Delta;<sub>+</sub>(<i>d</i>) &asymp; 1&middot;2<sup>&minus;<i>d</i></sup> and
+          &Delta;<sub>&minus;</sub>(<i>d</i>) &asymp; &minus;1.5&middot;2<sup>&minus;<i>d</i></sup>, which is just a shift.
+          This generalizes an earlier bit-shift scheme to signed arithmetic, and it is equivalent to a look-up table with
+          <i>r</i>&nbsp;=&nbsp;1.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Training in log domain ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">End-to-end training in the log domain</h2>
+    <p class="content lead has-text-centered">
+      Matrix products map directly onto the operations above. The remaining pieces of training each get a log-domain form.
+    </p>
+    <div class="cards4">
+      <div class="op">
+        <h4>Activation: log-leaky ReLU</h4>
+        <p style="font-size:1rem">
+          Leaky ReLU becomes llReLU: positive inputs pass through, negative ones get <i>&beta;</i> added to their log
+          magnitude. One hyper-parameter, and its derivative is equally simple in the log domain.
+        </p>
+      </div>
+      <div class="op">
+        <h4>Weight initialization</h4>
+        <p style="font-size:1rem">
+          A symmetric initial distribution <i>f<sub>w</sub></i> maps to a Bernoulli sign and log magnitudes drawn from
+          <i>f<sub>W</sub></i>(<i>y</i>) = 2<sup><i>y</i>+1</sup> ln 2 &middot; <i>f<sub>w</sub></i>(2<sup><i>y</i></sup>),
+          so weights start in the log domain directly.
+        </p>
+      </div>
+      <div class="op">
+        <h4>Soft-max and cross-entropy</h4>
+        <p style="font-size:1rem">
+          The soft-max and its gradient initialization <i>p</i> &minus; <i>y</i> are written with log-domain
+          exponentiation, addition and subtraction.
+        </p>
+      </div>
+      <div class="op">
+        <h4>Fixed-point bit-width</h4>
+        <p style="font-size:1rem">
+          A worst-case analysis says matching a 16-bit linear format (4 integer, 11 fraction bits) needs a 21-bit log
+          word. In practice the experiments show the same width as the linear domain suffices.
+        </p>
+      </div>
+    </div>
+    <p class="caption has-text-centered" style="margin-top:1rem">
+      Inputs are converted to the log domain offline in floating point; in a real-time system that conversion could
+      use the same approximate operations.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Results ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Results</h2>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">&le; 1.4</div><div class="stat-label">points of test accuracy between 16-bit log-domain training and floating point, on all four datasets</div></div>
+      <div class="stat"><div class="stat-num">20</div><div class="stat-label">table entries approximate every log-domain add (640 for the soft-max)</div></div>
+      <div class="stat"><div class="stat-num">16 bits</div><div class="stat-label">fixed-point log words, the same width as the linear baseline</div></div>
+      <div class="stat"><div class="stat-num">&times; &rarr; +</div><div class="stat-label">every multiply in the multiply-accumulates becomes an add</div></div>
+    </div>
+
+    <div class="table-container">
+      <table class="table results is-narrow is-hoverable">
+        <thead>
+          <tr>
+            <th rowspan="2" class="left">Dataset</th>
+            <th rowspan="2">Float</th>
+            <th colspan="2">Linear, fixed-point</th>
+            <th colspan="2" class="hl">Log, look-up table</th>
+            <th colspan="2">Log, bit-shifts</th>
+          </tr>
+          <tr><th>12b</th><th>16b</th><th class="hl">12b</th><th class="hl">16b</th><th>12b</th><th>16b</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="left">MNIST</td><td class="num ref">97.4</td><td class="num">97.3</td><td class="num">96.9</td><td class="num hl">96.0</td><td class="num hl"><b>97.2</b></td><td class="num">95.5</td><td class="num">96.5</td></tr>
+          <tr><td class="left">Fashion-MNIST</td><td class="num ref">87.1</td><td class="num">82.8</td><td class="num">88.0</td><td class="num hl">80.5</td><td class="num hl"><b>87.1</b></td><td class="num">79.3</td><td class="num">85.7</td></tr>
+          <tr><td class="left">EMNIST-Digits</td><td class="num ref">98.6</td><td class="num">98.3</td><td class="num">98.7</td><td class="num hl">96.9</td><td class="num hl"><b>97.5</b></td><td class="num">96.2</td><td class="num">97.4</td></tr>
+          <tr><td class="left">EMNIST-Letters</td><td class="num ref">88.1</td><td class="num">79.7</td><td class="num">88.7</td><td class="num hl">76.4</td><td class="num hl"><b>86.7</b></td><td class="num">73.7</td><td class="num">82.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="caption has-text-centered">
+      <b>Table 1.</b> Test accuracy (%) after 20 epochs. The log-domain columns approximate log-domain addition with
+      the look-up table or with bit-shifts. 16-bit words use 11 fraction bits in the linear domain and 10 in the log
+      domain (one bit goes to the sign); 12-bit words use 7 and 6. The network is an MLP with 784 inputs, one hidden
+      layer of 100 neurons and a soft-max output, trained by SGD (mini-batch 5, learning rate 0.01).
+    </p>
+
+    <h3 class="title is-4 has-text-centered" style="margin-top:2.5rem; color:var(--ink)">Learning curves</h3>
+    <div class="tabbar" role="tablist" aria-label="Dataset">
+      <button class="tab-btn" role="tab" id="tab-mnist" aria-controls="panel-mnist" aria-selected="true">MNIST</button>
+      <button class="tab-btn" role="tab" id="tab-fmnist" aria-controls="panel-fmnist" aria-selected="false" tabindex="-1">Fashion-MNIST</button>
+      <button class="tab-btn" role="tab" id="tab-emnistd" aria-controls="panel-emnistd" aria-selected="false" tabindex="-1">EMNIST-Digits</button>
+      <button class="tab-btn" role="tab" id="tab-emnistl" aria-controls="panel-emnistl" aria-selected="false" tabindex="-1">EMNIST-Letters</button>
+    </div>
+    <div class="tab-panel curve" role="tabpanel" id="panel-mnist" aria-labelledby="tab-mnist">
+      <div class="figure-frame"><img class="figure-img" src="images/mnist.png" width="900" height="867" loading="lazy" alt="MNIST validation accuracy over 20 epochs for linear and log-domain training at 12 and 16 bits."></div>
+    </div>
+    <div class="tab-panel curve" role="tabpanel" id="panel-fmnist" aria-labelledby="tab-fmnist" hidden>
+      <div class="figure-frame"><img class="figure-img" src="images/fashion_mnist.png" width="900" height="867" loading="lazy" alt="Fashion-MNIST validation accuracy over 20 epochs for linear and log-domain training at 12 and 16 bits."></div>
+    </div>
+    <div class="tab-panel curve" role="tabpanel" id="panel-emnistd" aria-labelledby="tab-emnistd" hidden>
+      <div class="figure-frame"><img class="figure-img" src="images/emnist_digits.png" width="900" height="867" loading="lazy" alt="EMNIST-Digits validation accuracy over 20 epochs for linear and log-domain training at 12 and 16 bits."></div>
+    </div>
+    <div class="tab-panel curve" role="tabpanel" id="panel-emnistl" aria-labelledby="tab-emnistl" hidden>
+      <div class="figure-frame"><img class="figure-img" src="images/emnist_letters.png" width="900" height="877" loading="lazy" alt="EMNIST-Letters validation accuracy over 20 epochs for linear and log-domain training at 12 and 16 bits."></div>
+    </div>
+    <p class="caption has-text-centered">
+      <b>Figure 2.</b> Validation accuracy for 12- and 16-bit log-domain training against 12- and 16-bit linear training.
+      Log-domain runs use the 20-entry table for all operations except the soft-max (640 entries).
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Talk ============================ -->
+<section class="section" id="talk">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Talk</h2>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <video controls preload="none" poster="images/brand/lnsdnn-card.png">
+          <source src="icassp_talk.mp4" type="video/mp4">
+          Your browser cannot play this video. <a href="icassp_talk.mp4">Download the talk</a> instead.
+        </video>
+        <p class="caption has-text-centered">
+          ICASSP 2020 presentation. <a href="ieee_icassp_2020_nntalc.pdf" target="_blank" rel="noopener">Slides (PDF)</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Code ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Code</h2>
+        <div class="content">
+          <p>
+            <a href="https://github.com/arnabsanyal/lnsdnn" target="_blank" rel="noopener">arnabsanyal/lnsdnn</a>
+            has the log-domain core in C (an OpenMP log-multiplier with a Python wrapper) and MLP experiments for all four
+            datasets, in floating and fixed point, in both the linear and log domains. Trained models are stored with Git LFS.
+          </p>
+<pre class="cmd"><code>conda env create -f setup/environment.yml
+conda activate lnsdnn
+cd src &amp;&amp; python setup.py install
+cd 3_log_floatingpoint/mnist
+python download_data.py               # fetch the dataset (see note below)
+python train.py                      # inference with the included model
+python train.py --is_training True   # train from scratch</code></pre>
+          <p class="caption">
+            The release is still in progress: the bit-shift experiments are not yet in the repository, and the dataset
+            downloads need re-hosting. The README tracks what is left.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Limitations ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Scope and limitations</h2>
+        <div class="content">
+          <ul>
+            <li><b>Small networks.</b> The experiments train one-hidden-layer MLPs; larger convolutional networks are future work.</li>
+            <li><b>Hardware cost is not measured.</b> The approach only pays off if the approximate log-domain adder is
+              substantially cheaper in silicon than a multiplier. Co-optimizing the &Delta; approximation for accuracy and
+              circuit complexity is future work.</li>
+            <li><b>12 bits is not enough everywhere.</b> At 12 bits, log-domain accuracy drops noticeably on Fashion-MNIST and
+              EMNIST-Letters (Table 1); 16 bits closes the gap.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ BibTeX ============================ -->
+<section class="section alt" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3">BibTeX</h2>
+<pre><button id="copy-bib" class="button is-small" type="button">Copy</button><code id="bibtex">@inproceedings{sanyal2020neural,
+  author    = {Sanyal, Arnab and Beerel, Peter A. and Chugg, Keith M.},
+  title     = {{Neural Network Training with Approximate Logarithmic Computations}},
+  booktitle = {ICASSP 2020 - 2020 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year      = {2020},
+  pages     = {3122--3126},
+  doi       = {10.1109/ICASSP40776.2020.9053015}
+}</code></pre>
+    <p class="caption">This work was supported in part by the National Science Foundation (CCF-1763747).</p>
+  </div>
+</section>
+
+<!-- ============================ Footer ============================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p><a href="../"><i class="fas fa-home"></i> Back to Arnab Sanyal's homepage</a></p>
+      <p class="is-size-7">
+        Page layout adapted from the
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page Template</a>,
+        based on the <a href="https://nerfies.github.io" target="_blank" rel="noopener">Nerfies</a> project page, licensed under
+        <a rel="license noopener" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // BibTeX copy
+  document.getElementById('copy-bib').addEventListener('click', function () {
+    var btn = this, text = document.getElementById('bibtex').innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  // Accessible tabs: each [role=tablist] controls the panels named by its buttons' aria-controls.
+  document.querySelectorAll('[role="tablist"]').forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on);
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        var next = tabs[(i + d + tabs.length) % tabs.length];
+        select(next); next.focus(); e.preventDefault();
+      });
+    });
+  });
+</script>
+</body>
+</html>
