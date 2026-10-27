@@ -1,29 +1,46 @@
 #!/usr/bin/env python3
 """
-Script to repaint the Live2D "hijiki" cat texture as Oliver
+Script to turn the Live2D "hijiki" cat into Oliver
 
 Oliver is a grey shorthair tabby: blue-grey fur with darker mackerel
 stripes, banded legs and tail, a tabby "M" on the forehead, a white muzzle
-and chin, a cream/buff belly, pale toes, a pink nose and green-gold eyes.
+and chin, a cream/buff belly, pale toes, a pink nose and pale yellow-green
+eyes.
 
-The model's geometry and motions are untouched; only the texture atlas is
-repainted, part by part. Each part is a rectangle on the 2048x2048 atlas
-(found by rendering the model with every part in a different colour).
+Texture: the atlas is repainted part by part. Each part is a rectangle on
+the 2048x2048 atlas (found by rendering the model with every part in a
+different colour). Fur edges are tightened so the outline reads crisply.
 
-Usage: python3 scripts/make_oliver_texture.py   (needs numpy and Pillow with WebP)
+Model: the eyes are enlarged by scaling the two warp deformers that hold
+each eye (B_EYE.03 left, B_EYE.04 right). Each has one keyform of 6x6 grid
+points, stored as big-endian float32 in the .moc; blinking and eye
+movement live in deformers below them, so they keep working.
+
+Usage: python3 scripts/make_oliver.py   (needs numpy and Pillow with WebP)
 """
 
 import json
 import os
+import struct
 
 import numpy as np
 from PIL import Image, ImageFilter
 
 SRC_TEXTURE = "live2dw/assets/moc/hijiki.2048/texture_00.png"
 SRC_MODEL = "live2dw/assets/hijiki.model.json"
+SRC_MOC = "live2dw/assets/moc/hijiki.moc"
+OUT_MOC = "live2dw/assets/moc/oliver.moc"
 OUT_TEXTURE = "live2dw/assets/moc/oliver.2048/texture_00.webp"
 OUT_MODEL = "live2dw/assets/oliver.model.json"
 SEED = 7
+
+# Eye warp deformers in hijiki.moc: byte offset of their 36-point grid
+EYE_GRIDS = {"B_EYE.03": 12737, "B_EYE.04": 13066}
+EYE_SCALE = 1.25
+
+# Fur parts whose soft painted edge is tightened
+CRISP_PARTS = ("head", "body", "chest", "upper_leg_l", "upper_leg_r", "lower_leg_l",
+               "lower_leg_r", "tail", "front_paws", "back_paws")
 
 # Atlas parts as (x0, y0, x1, y1) in texture pixels
 PARTS = {
@@ -86,6 +103,23 @@ def stripes(coord, period, warp, width=0.3):
     """Soft periodic bands along `coord`; `warp` bends them so they look painted."""
     phase = (coord / period + warp) % 1.0
     return smoothstep(width, width * 0.5, np.abs(phase - 0.5) * 2)
+
+
+def write_moc():
+    """Copy hijiki.moc with both eye warp grids scaled about their centres."""
+    with open(SRC_MOC, "rb") as f:
+        moc = bytearray(f.read())
+    n = 72
+    for name, offset in EYE_GRIDS.items():
+        pts = np.array(struct.unpack(f">{n}f", moc[offset:offset + 4 * n])).reshape(-1, 2)
+        # a warp grid inside its parent warp lives in 0..1 coordinates
+        assert pts.min() > 0 and pts.max() < 1, f"{name}: unexpected data at offset {offset}"
+        centre = pts.mean(axis=0)
+        pts = centre + (pts - centre) * EYE_SCALE
+        moc[offset:offset + 4 * n] = struct.pack(f">{n}f", *pts.ravel())
+    with open(OUT_MOC, "wb") as f:
+        f.write(moc)
+    print(f"✓ Wrote {OUT_MOC} (eyes x{EYE_SCALE})")
 
 
 def main():
@@ -176,19 +210,31 @@ def main():
     sl, _, _ = part_uv("whiskers_l")
     out[sl] = np.where((alpha[sl] > 0)[..., None] & (sat[sl] < 0.1)[..., None], WHISKER, out[sl])
 
-    # 5. Green-gold eyes: shift the yellow irises towards chartreuse
+    # 5. Pale yellow-green eyes: tone the saturated yellow irises down
     eyes = (alpha > 0) & (sat > 0.25) & (rgb[..., 0] > rgb[..., 2] + 60) & (rgb[..., 1] > rgb[..., 2] + 40)
-    out[eyes] = out[eyes] * np.array([0.88, 0.93, 0.55])
+    out[eyes] = out[eyes] * np.array([0.84, 0.93, 1.05])
 
-    result = np.dstack([np.clip(out, 0, 255), alpha]).astype(np.uint8)
+    # 6. Crisper silhouette: steepen the feathered alpha of the fur parts and
+    # sharpen the colour, leaving whiskers and ear tufts soft
+    alpha_out = alpha.copy()
+    for name in CRISP_PARTS:
+        sl, _, _ = part_uv(name)
+        alpha_out[sl] = 255 * smoothstep(0.18, 0.62, alpha[sl] / 255)
+    colour = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGB")
+    colour = colour.filter(ImageFilter.UnsharpMask(radius=2, percent=70, threshold=2))
+
+    result = np.dstack([np.asarray(colour), alpha_out]).astype(np.uint8)
     os.makedirs(os.path.dirname(OUT_TEXTURE), exist_ok=True)
     # lossy WebP keeps the file near the original PNG's size without the banding of a 256-colour palette
-    Image.fromarray(result, "RGBA").save(OUT_TEXTURE, quality=90, alpha_quality=100, method=6)
+    Image.fromarray(result, "RGBA").save(OUT_TEXTURE, quality=88, alpha_quality=100, method=6)
     print(f"✓ Wrote {OUT_TEXTURE}")
+
+    write_moc()
 
     with open(SRC_MODEL) as f:
         model = json.load(f)
     model["name"] = "oliver"
+    model["model"] = os.path.relpath(OUT_MOC, os.path.dirname(OUT_MODEL))
     model["textures"] = [os.path.relpath(OUT_TEXTURE, os.path.dirname(OUT_MODEL))]
     with open(OUT_MODEL, "w") as f:
         json.dump(model, f)
