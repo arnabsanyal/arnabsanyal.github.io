@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-Script to automatically update the Google Scholar citation count on the site
+Script to automatically update the fun-fact counters on the site
+
+Updates these counters in index.html:
+  - GOOGLE SCHOLAR CITATIONS: total citations on the Google Scholar profile
+  - STACK EXCHANGE OUTREACH:  "reached" on the Stack Overflow profile
 
 Google Scholar blocks datacenter IPs (GitHub Actions, scraping proxies), so
 this is meant to run from a home machine such as a NAS. It uses only the
 Python standard library, so it runs on a stock Synology DSM 7 install.
+It runs weekly, Mondays at 00:00, from Synology Task Scheduler.
 
 Two modes:
   python3 update_citations.py
@@ -12,6 +17,9 @@ Two modes:
   GITHUB_TOKEN=... python3 update_citations.py --push
       Update index.html on GitHub directly through the REST API; no clone or
       git install needed. The token needs Contents: read/write on this repo.
+
+If one source fails the others are still updated, and the script exits
+non-zero so the scheduler reports the failure.
 """
 
 import base64
@@ -26,111 +34,153 @@ import urllib.request
 
 # Google Scholar ID
 SCHOLAR_ID = "D9ebkwoAAAAJ"
+SCHOLAR_URL = f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en"
+
+# Stack Overflow profile
+STACKOVERFLOW_URL = "https://stackoverflow.com/users/senior-mle?tab=profile"
+
 INDEX_FILE = "index.html"
 MAX_RETRIES = 3
-
-# Google Scholar profile URL
-SCHOLAR_URL = f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en"
 
 # GitHub repository updated in --push mode
 GITHUB_REPO = "arnabsanyal/arnabsanyal.github.io"
 GITHUB_BRANCH = "master"
-COMMIT_MESSAGE = "🤖 Auto-update Google Scholar citation count"
 
-# Matches: <img ... alt="GOOGLE SCHOLAR CITATIONS" />
-#          <p class="fact-counter count" data-count="XX">0</p>
-COUNT_PATTERN = re.compile(
-    r'(<img[^>]*alt="GOOGLE SCHOLAR CITATIONS"[^>]*/>\s*<p[^>]*data-count=")(\d+)("[^>]*>)',
-    re.IGNORECASE,
-)
+BROWSER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
 
 class BlockedError(Exception):
-    """Google Scholar returned a CAPTCHA / unusual-traffic page."""
+    """The site returned a CAPTCHA / rate-limit page; retrying won't help."""
 
 
-def fetch_citation_count():
+def fetch_page(url):
     """
-    Fetch the total citation count from the Google Scholar profile page.
+    Fetch a page with browser-like headers, retrying transient failures.
 
     Returns:
-        int: Total citation count
+        str: Page HTML
     """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-    }
-
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            print(f"Attempt {attempt}/{MAX_RETRIES}: Fetching citation data...")
+            print(f"Attempt {attempt}/{MAX_RETRIES}: Fetching {url}")
             if attempt > 1:
                 wait_time = random.randint(10, 30) * attempt
                 print(f"Waiting {wait_time} seconds before retry...")
                 time.sleep(wait_time)
 
-            request = urllib.request.Request(SCHOLAR_URL, headers=headers)
+            request = urllib.request.Request(url, headers=BROWSER_HEADERS)
             with urllib.request.urlopen(request, timeout=30) as response:
                 html = response.read().decode("utf-8", errors="replace")
 
             if "captcha" in html.lower() or "unusual traffic" in html.lower():
-                raise BlockedError("Blocked by Google Scholar (CAPTCHA)")
+                raise BlockedError("Blocked (CAPTCHA page)")
+            return html
 
-            # The first "gsc_rsb_std" cell of the stats table is "Citations / All"
-            match = re.search(r'class="gsc_rsb_std">([\d,]+)<', html)
-            if not match:
-                raise ValueError(f"Could not find citation count in page ({len(html)} characters)")
-
-            citations = int(match.group(1).replace(",", ""))
-            print(f"✓ Successfully fetched citation count: {citations}")
-            return citations
-
-        except BlockedError as e:
-            # Retrying from the same IP only makes the block last longer
-            print(f"✗ {e}")
-            sys.exit(1)
         except urllib.error.HTTPError as e:
-            print(f"✗ Attempt {attempt} failed: HTTP {e.code} {e.reason}")
+            # Retrying from the same IP only makes a block last longer
             if e.code == 429:
-                sys.exit(1)
-        except Exception as e:
-            print(f"✗ Attempt {attempt} failed: {e}")
+                raise BlockedError("Rate limited (HTTP 429)")
+            print(f"✗ Attempt {attempt} failed: HTTP {e.code} {e.reason}")
+        except urllib.error.URLError as e:
+            print(f"✗ Attempt {attempt} failed: {e.reason}")
 
-    print(f"✗ All {MAX_RETRIES} attempts failed")
-    sys.exit(1)
+    raise RuntimeError(f"All {MAX_RETRIES} attempts failed")
 
 
-def replace_count(content, new_count):
+def fetch_scholar_citations():
+    """Total citation count from the Google Scholar profile page."""
+    html = fetch_page(SCHOLAR_URL)
+    # The first "gsc_rsb_std" cell of the stats table is "Citations / All"
+    match = re.search(r'class="gsc_rsb_std">([\d,]+)<', html)
+    if not match:
+        raise ValueError(f"Could not find citation count in page ({len(html)} characters)")
+    return int(match.group(1).replace(",", ""))
+
+
+def parse_abbreviated(text):
+    """Turn Stack Overflow's abbreviated numbers ("4,521", "298k", "1.2m") into ints."""
+    match = re.fullmatch(r"([\d.,]+)\s*([km]?)", text.strip().lower())
+    if not match:
+        raise ValueError(f"Unrecognised number: {text!r}")
+    multiplier = {"": 1, "k": 1000, "m": 1000000}[match.group(2)]
+    return round(float(match.group(1).replace(",", "")) * multiplier)
+
+
+def fetch_stackoverflow_reach():
+    """People "reached" from the Stack Overflow profile page (rounded, e.g. 298k)."""
+    html = fetch_page(STACKOVERFLOW_URL)
+    # <div class="fs-body3 fc-black-600">298k</div> reached
+    match = re.search(r'<div class="fs-body3[^"]*">\s*([\d.,]+\s*[kKmM]?)\s*</div>\s*reached\b', html)
+    if not match:
+        raise ValueError(f"Could not find reached count in page ({len(html)} characters)")
+    return parse_abbreviated(match.group(1))
+
+
+# (label used in index.html, fetch function)
+STATS = [
+    ("GOOGLE SCHOLAR CITATIONS", fetch_scholar_citations),
+    ("STACK EXCHANGE OUTREACH", fetch_stackoverflow_reach),
+]
+
+
+def replace_count(content, label, new_count):
     """
-    Replace the GOOGLE SCHOLAR CITATIONS data-count in index.html content.
+    Replace the data-count of the fun-fact whose image alt text is `label`.
+    Matches: <img ... alt="LABEL" />
+             <p class="fact-counter count" data-count="XX">0</p>
 
     Returns:
         tuple: (new_content, old_count), or (None, None) if not found
     """
-    match = COUNT_PATTERN.search(content)
+    pattern = re.compile(
+        rf'(<img[^>]*alt="{re.escape(label)}"[^>]*/>\s*<p[^>]*data-count=")(\d+)("[^>]*>)',
+        re.IGNORECASE,
+    )
+    match = pattern.search(content)
     if not match:
         return None, None
-    new_content = COUNT_PATTERN.sub(rf"\g<1>{new_count}\g<3>", content, count=1)
+    new_content = pattern.sub(rf"\g<1>{new_count}\g<3>", content, count=1)
     return new_content, int(match.group(2))
 
 
-def update_local_file(file_path, new_count):
-    """Update the citation count in a local index.html."""
+def apply_counts(content, counts):
+    """
+    Apply every fetched count to the index.html content.
+
+    Returns:
+        tuple: (new_content, list of "LABEL: old -> new" changes)
+    """
+    changes = []
+    for label, new_count in counts.items():
+        new_content, old_count = replace_count(content, label, new_count)
+        if new_content is None:
+            raise ValueError(f"Could not find {label} data-count in {INDEX_FILE}")
+        if old_count != new_count:
+            content = new_content
+            changes.append(f"{label}: {old_count} -> {new_count}")
+        else:
+            print(f"✓ {label} unchanged ({new_count})")
+    return content, changes
+
+
+def update_local_file(file_path, counts):
+    """Update the counters in a local index.html."""
     with open(file_path, "r") as f:
         content = f.read()
 
-    new_content, old_count = replace_count(content, new_count)
-    if new_content is None:
-        print(f"✗ Could not find GOOGLE SCHOLAR CITATIONS data-count in {file_path}")
-        sys.exit(1)
-    if old_count == new_count:
-        print(f"✓ Citation count unchanged ({new_count}), nothing to do")
+    new_content, changes = apply_counts(content, counts)
+    if not changes:
+        print("✓ Nothing to update")
         return
 
     with open(file_path, "w") as f:
         f.write(new_content)
-    print(f"✓ Updated {file_path} data-count: {old_count} -> {new_count}")
+    for change in changes:
+        print(f"✓ Updated {change}")
 
 
 def github_request(method, path, token, body=None):
@@ -150,56 +200,67 @@ def github_request(method, path, token, body=None):
         return json.load(response)
 
 
-def update_github_file(file_path, new_count, token):
-    """Update the citation count in index.html on GitHub via the contents API."""
+def update_github_file(file_path, counts, token):
+    """Update the counters in index.html on GitHub via the contents API."""
     try:
         current = github_request("GET", f"contents/{file_path}?ref={GITHUB_BRANCH}", token)
         content = base64.b64decode(current["content"]).decode("utf-8")
 
-        new_content, old_count = replace_count(content, new_count)
-        if new_content is None:
-            print(f"✗ Could not find GOOGLE SCHOLAR CITATIONS data-count in {file_path} on GitHub")
-            sys.exit(1)
-        if old_count == new_count:
-            print(f"✓ Citation count unchanged ({new_count}), nothing to push")
+        new_content, changes = apply_counts(content, counts)
+        if not changes:
+            print("✓ Nothing to push")
             return
 
         github_request("PUT", f"contents/{file_path}", token, {
-            "message": COMMIT_MESSAGE,
+            "message": "🤖 Auto-update site stats\n\n" + "\n".join(changes),
             "content": base64.b64encode(new_content.encode("utf-8")).decode("ascii"),
             "sha": current["sha"],
             "branch": GITHUB_BRANCH,
         })
-        print(f"✓ Pushed {file_path} data-count: {old_count} -> {new_count} to {GITHUB_BRANCH}")
+        for change in changes:
+            print(f"✓ Pushed {change}")
 
     except urllib.error.HTTPError as e:
-        print(f"✗ GitHub API error: HTTP {e.code} {e.reason}: {e.read().decode(errors='replace')[:300]}")
-        sys.exit(1)
+        raise RuntimeError(f"GitHub API error: HTTP {e.code} {e.reason}: "
+                           f"{e.read().decode(errors='replace')[:300]}")
 
 
 def main():
     """Main function"""
     push = "--push" in sys.argv[1:]
 
-    print("=== Updating Google Scholar Citations ===")
-    print(f"Scholar ID: {SCHOLAR_ID}")
-    print(f"Scholar URL: {SCHOLAR_URL}")
+    print("=== Updating site stats ===")
 
     token = os.getenv("GITHUB_TOKEN")
     if push and not token:
         print("✗ --push needs a GITHUB_TOKEN environment variable")
         sys.exit(1)
 
-    citation_count = fetch_citation_count()
+    counts, failed = {}, []
+    for label, fetch in STATS:
+        try:
+            counts[label] = fetch()
+            print(f"✓ {label}: {counts[label]}")
+        except Exception as e:
+            print(f"✗ {label}: {e}")
+            failed.append(label)
 
-    if push:
-        update_github_file(INDEX_FILE, citation_count, token)
-    else:
-        # Change to repository root directory
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(os.path.dirname(script_dir))
-        update_local_file(INDEX_FILE, citation_count)
+    if counts:
+        try:
+            if push:
+                update_github_file(INDEX_FILE, counts, token)
+            else:
+                # Change to repository root directory
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                os.chdir(os.path.dirname(script_dir))
+                update_local_file(INDEX_FILE, counts)
+        except Exception as e:
+            print(f"✗ {e}")
+            sys.exit(1)
 
+    if failed:
+        print(f"✗ Failed to fetch: {', '.join(failed)}")
+        sys.exit(1)
     print("=== Update Complete ===")
 
 
