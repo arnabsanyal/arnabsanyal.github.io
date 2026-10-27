@@ -129,21 +129,22 @@ STATS = [
 
 def replace_count(content, label, new_count):
     """
-    Replace the data-count of the fun-fact whose image alt text is `label`.
+    Replace the count of the stat whose image alt text is `label`: both the
+    data-count attribute and the visible number (shown without JavaScript).
     Matches: <img ... alt="LABEL" />
-             <p class="fact-counter count" data-count="XX">0</p>
+             <p class="stat-value" data-count="XX">X,XXX</p>
 
     Returns:
         tuple: (new_content, old_count), or (None, None) if not found
     """
     pattern = re.compile(
-        rf'(<img[^>]*alt="{re.escape(label)}"[^>]*/>\s*<p[^>]*data-count=")(\d+)("[^>]*>)',
+        rf'(<img[^>]*alt="{re.escape(label)}"[^>]*/>\s*<p[^>]*data-count=")(\d+)("[^>]*>)[^<]*',
         re.IGNORECASE,
     )
     match = pattern.search(content)
     if not match:
         return None, None
-    new_content = pattern.sub(rf"\g<1>{new_count}\g<3>", content, count=1)
+    new_content = pattern.sub(rf"\g<1>{new_count}\g<3>{new_count:,}", content, count=1)
     return new_content, int(match.group(2))
 
 
