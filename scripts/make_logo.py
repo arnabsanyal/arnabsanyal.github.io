@@ -22,7 +22,7 @@ YB = YC + T         # bottom of the crossbar
 
 # (main, accent) colours for each file
 PALETTES = {
-    "logo.svg": ("#f3fbfb", "#42fae7"),       # for dark backgrounds
+    "logo.svg": ("#f7f3f3", "#ff5c66"),       # for dark backgrounds
     "logo-dark.svg": ("#0c0404", "#bd0518"),  # for light backgrounds
 }
 FAVICON = {"file": "favicon.svg", "tile": "#2b2c2f", "colors": PALETTES["logo.svg"]}
