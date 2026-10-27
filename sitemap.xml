@@ -2,10 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://arnabsanyal.github.io/</loc>
+    <loc>https://arnabsanyal.com/</loc>
   </url><url>
-    <loc>https://arnabsanyal.github.io/categories/</loc>
+    <loc>https://arnabsanyal.com/iclr2027/chameleon.html</loc>
   </url><url>
-    <loc>https://arnabsanyal.github.io/tags/</loc>
+    <loc>https://arnabsanyal.com/icassp2026/entrollm.html</loc>
+  </url><url>
+    <loc>https://arnabsanyal.com/icassp2020/lnsdnn.html</loc>
+  </url><url>
+    <loc>https://arnabsanyal.com/categories/</loc>
+  </url><url>
+    <loc>https://arnabsanyal.com/tags/</loc>
   </url>
 </urlset>
