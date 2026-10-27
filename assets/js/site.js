@@ -179,7 +179,7 @@
       s.onload = function () {
         if (!window.L2Dwidget) return;
         window.L2Dwidget.init({
-          model: { scale: 1, hHeadPos: 0.5, vHeadPos: 0.618, jsonPath: "live2dw/assets/hijiki.model.json" },
+          model: { scale: 1, hHeadPos: 0.5, vHeadPos: 0.618, jsonPath: "live2dw/assets/oliver.model.json" },
           display: { superSample: 2, width: 150, height: 300, position: "right", hOffset: 0, vOffset: -20 },
           mobile: { show: false },
           react: { opacityDefault: 0.7, opacityOnHover: 0.2 },
