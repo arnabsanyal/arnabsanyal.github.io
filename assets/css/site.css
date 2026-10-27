@@ -323,7 +323,9 @@ a.aff:hover { border-color: var(--accent); transform: translateY(-2px); }
 .aff .tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .aff strong { font-size: 0.86rem; font-weight: 600; line-height: 1.3; }
 .aff span { font-size: 0.74rem; color: var(--ink-faint); line-height: 1.35; }
-.aff.now strong::after { content: "Current"; display: block; margin: 5px auto 0; width: max-content; padding: 1px 7px; border-radius: 99px; font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-dim); }
+.aff.now strong::after,
+.aca.now h3::after { content: "Current"; display: block; margin: 5px auto 0; width: max-content; padding: 1px 7px; border-radius: 99px; font-family: var(--sans); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent-dim); }
+.aca.now h3::after { margin: 6px 0 2px; }
 
 .academic { display: grid; gap: 12px; }
 .aca { display: grid; grid-template-columns: 72px 1fr; gap: 18px; align-items: start; padding: 18px; border: 1px solid var(--rule); border-radius: var(--radius); background: color-mix(in srgb, var(--card) 88%, transparent); }
