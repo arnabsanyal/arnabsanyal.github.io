@@ -24,7 +24,7 @@ import os
 import struct
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter
 
 SRC_TEXTURE = "live2dw/assets/moc/hijiki.2048/texture_00.png"
 SRC_MODEL = "live2dw/assets/hijiki.model.json"
@@ -90,6 +90,28 @@ def fbm(shape, rng):
 def smoothstep(e0, e1, x):
     t = np.clip((x - e0) / (e1 - e0), 0.0, 1.0)
     return t * t * (3 - 2 * t)
+
+
+def fur_strokes(sl, u, rng, count=4200):
+    """
+    Short hair strokes for a flat part: mostly downward, splaying outward from
+    the centre line, a mix of lighter and darker hairs. Returns an RGB offset
+    to add to the part.
+    """
+    h, w = u.shape
+    light = Image.new("L", (w, h), 0)
+    dark = Image.new("L", (w, h), 0)
+    dl, dd = ImageDraw.Draw(light), ImageDraw.Draw(dark)
+    for _ in range(count):
+        x, y = rng.random() * w, rng.random() * h
+        angle = np.pi / 2 + (x / w - 0.5) * 0.9 + rng.normal(0, 0.18)
+        length = rng.uniform(10, 26)
+        x1, y1 = x + np.cos(angle) * length, y + np.sin(angle) * length
+        draw = dl if rng.random() < 0.55 else dd
+        draw.line((x, y, x1, y1), fill=int(rng.uniform(120, 255)), width=2)
+    light = np.asarray(light.filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255
+    dark = np.asarray(dark.filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255
+    return (light * 20 - dark * 19)[..., None]
 
 
 def part_uv(name):
@@ -175,8 +197,10 @@ def main():
 
     sl, u, v = part_uv("chest")
     n = noise[sl]
-    necklace = stripes(v, 0.09, n * 0.2, 0.25) * smoothstep(0.2, 0.28, v) * smoothstep(0.5, 0.42, v)
-    stripe_mask[sl] = np.maximum(stripe_mask[sl], necklace * 0.22)
+    # broken "necklace" bands across the upper chest, like his photos
+    necklace = stripes(v + np.abs(u - 0.5) * 0.06, 0.085, n * 0.3, 0.3)
+    necklace *= smoothstep(0.16, 0.24, v) * smoothstep(0.58, 0.46, v) * smoothstep(0.35, 0.65, n + 0.15)
+    stripe_mask[sl] = np.maximum(stripe_mask[sl], necklace * 0.45)
 
     # soften the markings so they read as fur, not paint
     stripe_mask = np.asarray(Image.fromarray((stripe_mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
@@ -188,6 +212,7 @@ def main():
     belly = smoothstep(0.55, 0.92, v + (noise[sl] - 0.5) * 0.12) * smoothstep(0.5, 0.2, np.abs(u - 0.5))
     shade_c = (0.75 + 0.25 * smoothstep(0.08, 0.26, lum[sl]))[..., None]
     out[sl] += ((CREAM * shade_c) - out[sl]) * (belly * 0.6 * fur[sl])[..., None]
+    out[sl] += fur_strokes(sl, u, rng) * fur[sl][..., None]
 
     for name, colour, amount in (("muzzle", WHITE, 0.9), ("chin", WHITE, 0.95),
                                  ("front_paws", PAW, 0.8), ("back_paws", PAW, 0.7)):
