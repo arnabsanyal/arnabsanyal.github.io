@@ -180,9 +180,10 @@
         if (!window.L2Dwidget) return;
         window.L2Dwidget.init({
           model: { scale: 1, hHeadPos: 0.5, vHeadPos: 0.618, jsonPath: "live2dw/assets/oliver.model.json" },
-          display: { superSample: 2, width: 150, height: 300, position: "right", hOffset: 0, vOffset: -20 },
+          // render at the screen's pixel density so his outline stays sharp
+          display: { superSample: Math.max(2, Math.ceil(window.devicePixelRatio || 1)), width: 180, height: 360, position: "right", hOffset: 0, vOffset: -24 },
           mobile: { show: false },
-          react: { opacityDefault: 0.7, opacityOnHover: 0.2 },
+          react: { opacityDefault: 1, opacityOnHover: 0.2 },
           log: false, pluginJsPath: "lib/", pluginModelPath: "assets/", pluginRootPath: "live2dw/", tagMode: false
         });
       };
