@@ -170,9 +170,9 @@
   var year = document.getElementById("current-year");
   if (year) year.textContent = new Date().getFullYear();
 
-  // ----- Live2D cat: large screens with a mouse only, loaded when idle --------------
-  var bigScreen = window.matchMedia("(min-width: 1200px) and (hover: hover) and (pointer: fine)");
-  if (bigScreen.matches && !reduced) {
+  // ----- Live2D cat: desktops and laptops only (not phones or tablets), loaded when idle --
+  var bigScreen = window.matchMedia("(min-width: 992px) and (any-hover: hover) and (any-pointer: fine)");
+  if (bigScreen.matches) {
     var loadCat = function () {
       var s = document.createElement("script");
       s.src = "live2dw/lib/L2Dwidget.min.js";
