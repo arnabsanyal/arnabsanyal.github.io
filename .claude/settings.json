@@ -1,0 +1,13 @@
+{
+  "env": {
+    "GIT_AUTHOR_NAME": "Arnab Sanyal",
+    "GIT_AUTHOR_EMAIL": "sanyal@utexas.edu",
+    "GIT_COMMITTER_NAME": "Arnab Sanyal",
+    "GIT_COMMITTER_EMAIL": "sanyal@utexas.edu"
+  },
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  }
+}
