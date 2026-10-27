@@ -175,6 +175,7 @@ p { margin: 0 0 1em; }
 }
 .btn:hover { color: var(--ink); border-color: var(--ink-faint); background: var(--card-hover); }
 .btn .icon { width: 15px; height: 15px; }
+.btn .ai { font-size: 15px; width: 15px; text-align: center; }
 
 /* stats: the <img alt> + data-count markup is what scripts/update_citations.py rewrites */
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 40px 0 0; border: 1px solid var(--rule); border-radius: var(--radius); background: color-mix(in srgb, var(--card) 80%, transparent); }
@@ -352,11 +353,12 @@ a.aff:hover { border-color: var(--accent); transform: translateY(-2px); }
 .footer-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
 .footer-links { display: flex; flex-wrap: wrap; gap: 6px; }
 .footer-links a, .footer-links button {
-  display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 9px;
+  text-decoration: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 9px;
   border: 1px solid var(--rule); background: transparent; color: var(--ink-soft); cursor: pointer; padding: 0;
 }
 .footer-links a:hover, .footer-links button:hover { color: var(--ink); border-color: var(--accent); }
 .footer-links .icon { width: 18px; height: 18px; }
+.footer-links .ai { font-size: 18px; }
 .copyright { font-size: 0.82rem; color: var(--ink-faint); margin: 0; }
 
 /* ---------- dialogs ---------- */
