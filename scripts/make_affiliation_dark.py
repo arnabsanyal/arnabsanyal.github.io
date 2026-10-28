@@ -29,7 +29,7 @@ LOGOS = {  # source -> (output, pad to square with a margin?, brand colour or No
     "images/affiliations/amd.png": ("images/affiliations/amd-dark.webp", False, None),
     "images/affiliations/qualcomm.jpeg": ("images/affiliations/qualcomm-dark.webp", False, None),
     "images/affiliations/mtk.jpg": ("images/affiliations/mtk-dark.webp", True, None),
-    "images/affiliations/uta.png": ("images/affiliations/uta-dark.webp", True, None),
+    "images/affiliations/uta.png": ("images/affiliations/uta-dark.webp", True, (0xBF, 0x57, 0x00)),  # UT Burnt Orange
     "images/affiliations/usc.jpg": ("images/affiliations/usc-dark.webp", True, (0x99, 0x00, 0x00)),  # USC Cardinal
     "images/affiliations/iitkgp.png": ("images/affiliations/iitkgp-dark.webp", True, None),
 }
