@@ -332,8 +332,12 @@ a.aff:hover { border-color: var(--accent); transform: translateY(-2px); }
 .aca .tile { width: 72px; height: 72px; border-radius: 12px; background: var(--tile); display: grid; place-items: center; padding: 9px; }
 .aca .tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-/* Dark theme: organisation logos sit on the card, not a light tile. Line-art
-   logos (img.ink) flip lightness but keep their hue; full-colour marks stay. */
+/* Dark theme: organisation logos sit on the card, not a light tile. Two-colour
+   logos swap to a variant with brand colour and white exchanged
+   (scripts/make_affiliation_dark.py); black-on-white logos (img.ink) invert. */
+img.logo-night { display: none; }
+:root[data-theme="dark"] img.logo-day { display: none; }
+:root[data-theme="dark"] img.logo-night { display: block; }
 :root[data-theme="dark"] .org-logo,
 :root[data-theme="dark"] .tile { background: transparent; }
 :root[data-theme="dark"] img.ink { filter: invert(1) hue-rotate(180deg) saturate(1.6); }
@@ -437,4 +441,6 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   body { background: #fff; color: #000; }
   details.abstract > *:not(summary) { display: block; }
   img.ink { filter: none !important; }
+  img.logo-day { display: block !important; }
+  img.logo-night { display: none !important; }
 }
