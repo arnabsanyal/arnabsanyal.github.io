@@ -331,6 +331,14 @@ a.aff:hover { border-color: var(--accent); transform: translateY(-2px); }
 .aca { display: grid; grid-template-columns: 72px 1fr; gap: 18px; align-items: start; padding: 18px; border: 1px solid var(--rule); border-radius: var(--radius); background: color-mix(in srgb, var(--card) 88%, transparent); }
 .aca .tile { width: 72px; height: 72px; border-radius: 12px; background: var(--tile); display: grid; place-items: center; padding: 9px; }
 .aca .tile img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* Dark theme: organisation logos sit on the card, not a light tile. Line-art
+   logos (img.ink) flip lightness but keep their hue; full-colour marks stay. */
+:root[data-theme="dark"] .org-logo,
+:root[data-theme="dark"] .tile { background: transparent; }
+:root[data-theme="dark"] img.ink { filter: invert(1) hue-rotate(180deg) saturate(1.6); }
+:root[data-theme="dark"] .org-logo img:not(.ink),
+:root[data-theme="dark"] .tile img:not(.ink) { border-radius: 6px; }
 .aca h3 { font-size: 1.02rem; font-weight: 600; }
 .aca h3 a { color: var(--ink); text-decoration: none; }
 .aca h3 a:hover { color: var(--accent-ink); }
@@ -428,4 +436,5 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   :root { --bg: #fff; --ink: #000; --ink-soft: #222; --ink-faint: #444; --card: #fff; --rule: #ccc; }
   body { background: #fff; color: #000; }
   details.abstract > *:not(summary) { display: block; }
+  img.ink { filter: none !important; }
 }
