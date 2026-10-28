@@ -340,6 +340,10 @@ img.logo-night { display: none; }
 :root[data-theme="dark"] img.logo-night { display: block; }
 :root[data-theme="dark"] .org-logo,
 :root[data-theme="dark"] .tile { background: transparent; }
+/* Padded variants carry the tile padding inside the image, so they fill the
+   tile and the artwork keeps its light-mode size. */
+:root[data-theme="dark"] .bleed { padding: 0; }
+:root[data-theme="dark"] .bleed img.logo-night { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: inherit; }
 :root[data-theme="dark"] img.ink { filter: invert(1) hue-rotate(180deg) saturate(1.6); }
 :root[data-theme="dark"] .org-logo img:not(.ink),
 :root[data-theme="dark"] .tile img:not(.ink) { border-radius: 6px; }
