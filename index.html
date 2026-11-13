@@ -187,20 +187,20 @@
           <article class="area wide">
             <h3><span class="num">01</span>Post-Training Quantization &amp; Number Formats</h3>
             <span class="tagline">Choosing the format, not just the scale</span>
-            <p>Quantization that adapts to the distribution it encodes. Number formats (INT, FP8, MX, NF4) are chosen per weight channel and per diffusion timestep, and LLM weights use mixed unsigned/asymmetric quantization. None of it needs retraining.</p>
-            <div class="papers"><a href="#pub-chameleon" data-show-area="ptq">Chameleon · under review</a><a href="#pub-entrollm" data-show-area="ptq">EntroLLM · ICASSP 2026</a></div>
+            <p>Quantization that adapts to the distribution it encodes. Number formats (INT, FP8, MX, NF4) are chosen per weight channel and per diffusion timestep, LLM weights use mixed unsigned/asymmetric quantization, and GPTQ is steered so llama.cpp&rsquo;s integer codes compress. None of it needs retraining.</p>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="ptq">LazyWeights · preprint</a><a href="#pub-chameleon" data-show-area="ptq">Chameleon · under review</a><a href="#pub-entrollm" data-show-area="ptq">EntroLLM · ICASSP 2026</a></div>
           </article>
           <article class="area">
             <h3><span class="num">02</span>Entropy-Coded Model Compression</h3>
             <span class="tagline">Bits that are cheaper to move</span>
-            <p>Quantized weights and representations treated as a source to code: entropy-reducing quantization, Huffman coding and parallel decoding that cut storage and memory bandwidth on bandwidth-starved devices.</p>
-            <div class="papers"><a href="#pub-entrollm" data-show-area="compression">EntroLLM</a><a href="#pub-entromcu" data-show-area="compression">EntroMCU</a><a href="#pub-oasis" data-show-area="compression">OASIS</a><a href="#pub-halrc" data-show-area="compression">In-sensor compression</a></div>
+            <p>Quantized weights and representations treated as a source to code: entropy-reducing quantization, Huffman coding and parallel decoding, in software or on demand in hardware, that cut storage and memory bandwidth on bandwidth-starved devices.</p>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="compression">LazyWeights</a><a href="#pub-entrollm" data-show-area="compression">EntroLLM</a><a href="#pub-entromcu" data-show-area="compression">EntroMCU</a><a href="#pub-oasis" data-show-area="compression">OASIS</a><a href="#pub-halrc" data-show-area="compression">In-sensor compression</a></div>
           </article>
           <article class="area">
             <h3><span class="num">03</span>Hardware&ndash;Algorithm Co-design</h3>
             <span class="tagline">From kernels to microcontrollers</span>
-            <p>Algorithms shaped by their silicon: ternary GEMM kernels and KV-aware SRAM/Flash management for LLMs on Cortex-M microcontrollers, and multiplication-free, log-domain training for accelerators.</p>
-            <div class="papers"><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM</a></div>
+            <p>Algorithms shaped by their silicon: a Huffman decode unit between DRAM and L2 for edge GPUs, ternary GEMM kernels and KV-aware SRAM/Flash management for LLMs on Cortex-M microcontrollers, and multiplication-free, log-domain training for accelerators.</p>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="edge">LazyWeights · preprint</a><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM</a></div>
           </article>
           <article class="area wide">
             <h3><span class="num">04</span>Efficient Perception: In-Sensor &amp; Video</h3>
@@ -224,6 +224,28 @@
         <p class="sr-only" id="filter-status" aria-live="polite"></p>
 
         <h3 class="year">2026</h3>
+
+        <article class="pub" id="pub-lazyweights" data-areas="ptq compression edge">
+          <a class="pub-thumb" href="preprint/lazyweights.html" tabindex="-1" aria-hidden="true"><img src="images/portfolio/under_review_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
+          <div>
+            <div class="pub-meta"><span class="badge pre">Preprint</span><span class="badge venue">arXiv</span></div>
+            <h3><a href="preprint/lazyweights.html">LazyWeights: Decode-on-Demand Edge LLMs</a></h3>
+            <p class="authors"><span class="me">Arnab Sanyal</span>, Gourav Datta, and Sandeep P. Chinchali</p>
+            <p class="venue-line">Preprint, <a href="https://arxiv.org/abs/2611.17108" target="_blank" rel="noopener">arXiv:2611.17108</a></p>
+            <div class="links">
+              <a href="preprint/lazyweights.html"><svg class="icon" aria-hidden="true"><use href="#i-globe"/></svg>Project page</a>
+              <a href="https://arxiv.org/abs/2611.17108" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>arXiv</a>
+              <a href="https://github.com/arnabsanyal/LazyWeights" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-code"/></svg>Code</a>
+              <a href="https://huggingface.co/collections/arnabsanyal/lazyweights-6af7242c458566ddfc0b34de" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>Models</a>
+              <a href="preprint/lazyweights.bib"><svg class="icon" aria-hidden="true"><use href="#i-quote"/></svg>BibTeX</a>
+            </div>
+            <details class="abstract">
+              <summary>Abstract</summary>
+              <p>Memory decides which LLMs an edge device runs, and how fast: capacity on a 4&nbsp;GB Jetson Nano, bandwidth on an 8&nbsp;GB Jetson Orin Nano Super. Deployed formats (GPTQ, AWQ, llama.cpp&rsquo;s K- and I-quants) spend equal bits on every integer code of a matrix, although the codes are far from uniform. <strong>LazyWeights</strong> keeps these formats but tunes GPTQ so the codes compress, Huffman-codes them losslessly in interleaved lanes, and decodes them on demand in a small unit between DRAM and L2, so GPU kernels run unchanged and DRAM moves only coded bytes. At 1% and 3.5% perplexity budgets, coded Phi-3-mini, Mistral-7B and SmolLM-1.7B are 5.7&ndash;31.4% smaller than the best llama.cpp format. A bit-exact 0.21&nbsp;mm<sup>2</sup> ASIC decoder unit (1&nbsp;GHz, 7&nbsp;nm) cuts Orin latency and energy per token by up to 36% and 38% (54% and 44% with prompt-lookup speculation). On the Nano, LazyWeights needs 58&ndash;64% less time and 53&ndash;57% less energy per token than CPU llama.cpp, and runs a streamed Mistral-7B 6.6&times; faster at 3.89 bits per weight. A Huffman decoder beats an rANS decoder in rate and area at equal throughput; the ASIC decoder unit runs bit-exact on a Zynq UltraScale+ FPGA (AMD ZCU102).</p>
+              <p class="terms">Index terms: AI and Machine Learning, Architecture &amp; System Design, Embedded Systems and IoT</p>
+            </details>
+          </div>
+        </article>
 
         <article class="pub" id="pub-chameleon" data-areas="ptq">
           <a class="pub-thumb" href="preprint/chameleon.html" tabindex="-1" aria-hidden="true"><img src="images/portfolio/under_review_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LazyWeights: Decode-on-Demand Edge LLMs</title>
+  <meta name="description" content="LazyWeights keeps llama.cpp's quantization formats, tunes GPTQ so the integer codes compress, Huffman-codes them losslessly and decodes them on demand in a small unit between DRAM and L2, so edge GPUs move only coded bytes.">
+  <meta name="author" content="Arnab Sanyal, Gourav Datta, Sandeep P. Chinchali">
+  <meta name="keywords" content="LLM compression, entropy coding, Huffman coding, GPTQ, llama.cpp, GGUF, edge inference, Jetson, hardware decoder, FPGA">
+  <meta property="og:title" content="LazyWeights: Decode-on-Demand Edge LLMs">
+  <meta property="og:description" content="Huffman-coded LLM weights, decoded on demand between DRAM and L2. 5.7–31.4% smaller than the best llama.cpp format at equal perplexity budgets.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://arnabsanyal.com/preprint/lazyweights.html">
+  <meta property="og:image" content="https://arnabsanyal.com/preprint/images/brand/lazyweights-banner.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="images/brand/lazyweights-mark-light.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="images/brand/lazyweights-favicon-64.png">
+  <link rel="apple-touch-icon" href="images/brand/lazyweights-apple-touch-icon.png">
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <style>
+    /* palette taken from the LazyWeights logo */
+    :root {
+      --ink: #111827;
+      --ink-2: #1F2937;
+      --blue: #0057B8;       /* logo blue on light backgrounds */
+      --blue-hi: #4C9AFF;    /* logo blue on the dark hero */
+      --slate: #475569;
+      --muted: #56606E;
+      --surface: #F5F8FC;
+    }
+    body { font-family: 'Noto Sans', sans-serif; color: #1f2733; background: #fff; }
+    .title, .subtitle, .button, .tab-btn, .stat-num { font-family: 'Google Sans', 'Noto Sans', sans-serif; }
+    a { color: var(--blue); }
+    a:hover { color: var(--ink); }
+
+    /* ---------- hero ---------- */
+    .hero.brand { background: var(--ink); color: #E5E9F0; }
+    .hero.brand .hero-body { padding: 3rem 1.5rem 2.5rem; }
+    .brand-logo { width: 150px; height: 150px; display: block; margin: 0 auto 1.2rem; }
+    .publication-title { color: #fff !important; font-size: 2.75rem !important; line-height: 1.15; }
+    .publication-title .name { color: var(--blue-hi); }
+    .publication-authors { margin-top: 1.1rem; font-size: 1.15rem; }
+    .publication-authors a { color: #fff; border-bottom: 1px solid rgba(76,154,255,.6); }
+    .publication-authors a:hover { color: var(--blue-hi); }
+    .author-block { display: inline-block; margin: 0 .4rem; }
+    .affil { color: #A3AEBD; font-size: 1rem; margin-top: .25rem; }
+    .affil span { display: inline-block; margin: 0 .4rem; }
+    .venue-tag {
+      display: inline-block; margin-top: .9rem; padding: .25rem .85rem; border-radius: 999px;
+      border: 1px solid var(--blue-hi); color: var(--blue-hi); font-weight: 600; font-size: .95rem;
+    }
+    .publication-links { margin-top: 1.4rem; }
+    .publication-links .button { margin: .25rem; background: #fff; color: var(--ink); border: none; font-weight: 600; }
+    .publication-links .button:hover { background: var(--blue); color: #fff; }
+    .hf { font-size: 1.05rem; line-height: 1; }
+
+    /* ---------- layout ---------- */
+    .section { padding: 3.5rem 1.5rem; }
+    .section.alt { background: var(--surface); }
+    .section-title { color: var(--ink) !important; text-align: center; margin-bottom: 1.5rem !important; }
+    .lead { font-size: 1.12rem; line-height: 1.75; }
+    .content.has-text-justified p, .content p { line-height: 1.75; }
+    .figure-img { width: 100%; height: auto; display: block; border-radius: 6px; background: #fff; }
+    .figure-frame { background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; padding: .75rem; }
+    .figure-frame.narrow { max-width: 720px; margin: 0 auto; }
+    .caption { color: var(--muted); font-size: .92rem; line-height: 1.55; margin-top: .7rem; }
+
+    /* ---------- TL;DR ---------- */
+    .tldr { border-left: 4px solid var(--blue); background: var(--surface); padding: 1rem 1.25rem; border-radius: 0 8px 8px 0; font-size: 1.08rem; }
+
+    /* ---------- stat tiles ---------- */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+    .stat { background: #fff; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 700; color: var(--ink); line-height: 1.1; }
+    .stat-label { font-size: .85rem; color: var(--muted); margin-top: .35rem; line-height: 1.4; }
+    @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ---------- pipeline steps ---------- */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.75rem; }
+    .step { background: #fff; border: 1px solid #E2E8F0; border-top: 4px solid var(--blue); border-radius: 8px; padding: 1rem; }
+    .step h4 { font-family: 'Google Sans', sans-serif; font-weight: 700; margin-bottom: .2rem; color: var(--ink); }
+    .step .where { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; font-weight: 700; color: var(--blue); }
+    .step p { font-size: .9rem; color: var(--muted); margin-top: .45rem; line-height: 1.55; }
+    .step.s2 { border-top-color: #5B8FD6; } .step.s3 { border-top-color: var(--slate); }
+    @media (max-width: 900px) { .steps { grid-template-columns: 1fr; } }
+
+    /* ---------- tabs ---------- */
+    .tabbar { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-bottom: 1.25rem; }
+    .tab-btn {
+      border: 1px solid #CBD5E1; background: #fff; color: var(--ink); border-radius: 999px;
+      padding: .45rem 1rem; cursor: pointer; font-size: .95rem;
+    }
+    .tab-btn:hover { border-color: var(--blue); }
+    .tab-btn[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .tab-btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+    .tab-panel[hidden] { display: none; }
+
+    /* ---------- tables ---------- */
+    .table-container { margin: 0 auto; }
+    table.results { font-size: .92rem; margin: 0 auto; }
+    table.results th { color: var(--ink); white-space: nowrap; }
+    table.results td.num, table.results th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    table.results tr.ours td { background: #E8F1FB; }
+    table.results tr.ref td { color: var(--muted); }
+    table.results td.group { font-weight: 600; color: var(--ink); vertical-align: middle; white-space: nowrap; }
+    table.results .setup { display: block; font-weight: 400; font-size: .8rem; color: var(--muted); }
+    table.results b { color: var(--ink); }
+    table.results th.span { text-align: center; border-bottom-width: 1px; }
+
+    /* ---------- bibtex ---------- */
+    #BibTeX pre { position: relative; white-space: pre-wrap; background: var(--surface); border-radius: 8px; padding-right: 5rem; }
+    #copy-bib { position: absolute; top: .6rem; right: .6rem; }
+    .footer { padding: 2.5rem 1.5rem; background: var(--ink); color: #A3AEBD; }
+    .footer a { color: #fff; }
+    .footer a:hover { color: var(--blue-hi); }
+  </style>
+</head>
+<body>
+
+<!-- ============================ Header ============================ -->
+<section class="hero brand">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <img class="brand-logo" src="images/brand/lazyweights-mark-dark.svg" alt="LazyWeights logo: a dumbbell at rest whose plates are columns of bit cells, with z's rising from it">
+      <h1 class="title is-1 publication-title"><span class="name">LazyWeights</span>: Decode-on-Demand<br>Edge LLMs</h1>
+
+      <div class="publication-authors">
+        <span class="author-block"><a href="https://arnabsanyal.com/" target="_blank" rel="noopener">Arnab Sanyal</a><sup>1</sup></span>
+        <span class="author-block">Gourav Datta<sup>2</sup></span>
+        <span class="author-block">Sandeep P. Chinchali<sup>1</sup></span>
+      </div>
+      <div class="affil"><span><sup>1</sup>The University of Texas at Austin</span><span><sup>2</sup>Case Western Reserve University</span></div>
+      <span class="venue-tag">arXiv preprint</span>
+
+      <div class="publication-links">
+        <a href="https://arxiv.org/abs/2611.17108" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="ai ai-arxiv"></i></span><span>arXiv</span>
+        </a>
+        <a href="https://github.com/arnabsanyal/LazyWeights" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
+        </a>
+        <a href="https://huggingface.co/collections/arnabsanyal/lazyweights-6af7242c458566ddfc0b34de" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><span class="hf" aria-hidden="true">&#129303;</span></span><span>Models</span>
+        </a>
+        <a href="https://github.com/arnabsanyal/LazyWeights/releases" target="_blank" rel="noopener" class="button is-rounded">
+          <span class="icon"><i class="fas fa-box-archive"></i></span><span>Device logs</span>
+        </a>
+        <a href="#BibTeX" class="button is-rounded">
+          <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TL;DR + overview ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <p class="tldr">
+      <b>TL;DR</b> &mdash; The integer codes of a quantized LLM are far from uniform, yet every deployed format stores
+      each one in the same number of bits. LazyWeights keeps llama.cpp's formats, tunes GPTQ so the codes compress,
+      Huffman-codes them losslessly in interleaved lanes, and decodes them <em>on demand</em> in a small unit between
+      DRAM and L2, so the GPU kernels run unchanged and DRAM moves only coded bytes. At equal perplexity budgets the
+      models are 5.7&ndash;31.4% smaller than the best llama.cpp format.
+    </p>
+
+    <div class="figure-frame narrow" style="margin-top:2rem">
+      <img class="figure-img" src="images/lazyweights/overview.png" width="1800" height="1351" loading="lazy"
+           alt="LazyWeights overview: entropy-aware GPTQ and a per-matrix Huffman bundle in the cloud; on the device, a Huffman decode unit between the memory controller and the L2 cache; bits per weight fall from 16 to 3.4">
+    </div>
+    <p class="caption has-text-centered">
+      <b>Fig. 1.</b> Entropy-aware quantization and a per-matrix Huffman bundle are built in the cloud. On the device, a
+      decode unit between the memory controller and L2 restores the fixed-width codes, so the GPU sees ordinary packed
+      integers. Without the unit, the GPU kernels decode in software inside GEMV, as the reference.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Abstract ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3 section-title">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Memory decides which LLMs an edge device runs, and how fast: capacity on a 4&nbsp;GB Jetson Nano, bandwidth
+            on an 8&nbsp;GB Jetson Orin Nano Super. Deployed formats (GPTQ, AWQ, llama.cpp's K- and I-quants) spend
+            equal bits on every integer code of a matrix, although the codes are far from uniform.
+          </p>
+          <p>
+            <b>LazyWeights</b> keeps these formats but tunes GPTQ so the codes compress, Huffman-codes them losslessly
+            in interleaved lanes, and decodes them on demand in a small unit between DRAM and L2, so GPU kernels run
+            unchanged and DRAM moves only coded bytes. At 1% and 3.5% perplexity budgets, coded Phi-3-mini, Mistral-7B
+            and SmolLM-1.7B are 5.7&ndash;31.4% smaller than the best llama.cpp format.
+          </p>
+          <p>
+            A bit-exact 0.21&nbsp;mm<sup>2</sup> ASIC decoder unit (1&nbsp;GHz, 7&nbsp;nm) cuts Orin latency and energy
+            per token by up to 36% and 38% (54% and 44% with prompt-lookup speculation). On the Nano, LazyWeights needs
+            58&ndash;64% less time and 53&ndash;57% less energy per token than CPU llama.cpp, and runs a streamed
+            Mistral-7B 6.6&times; faster at 3.89 bits per weight. A Huffman decoder beats an rANS decoder in rate and
+            area at equal throughput; the ASIC decoder unit runs bit-exact on a Zynq UltraScale+ FPGA (AMD ZCU102).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Key idea ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Equal bits for unequal codes</h2>
+    <div class="content lead">
+      <p>
+        On the edge, memory is the bottleneck twice over. The 4&nbsp;GB Jetson Nano cannot even hold Mistral-7B, and the
+        8&nbsp;GB Orin Nano Super is bound by DRAM bandwidth. Every deployed weight format, llama.cpp's K- and I-quants
+        included, gives each integer code the same width, although the codes of a matrix are far from uniform.
+        LazyWeights spends the bits where the information is: it keeps the format, steers the codes toward a
+        concentrated histogram, and codes them losslessly.
+      </p>
+    </div>
+
+    <div class="figure-frame narrow">
+      <img class="figure-img" src="images/lazyweights/code_selection.png" width="1050" height="700" loading="lazy"
+           alt="Code selection: llama.cpp gives each sub-block its own step and rounds each weight alone, so codes spread; LazyWeights shares one widened step per super-block and lets GPTQ feed each column's error forward, so the codes concentrate">
+    </div>
+    <p class="caption has-text-centered">
+      <b>Fig. 2.</b> Code selection (histograms illustrative). LazyWeights keeps the format but shares one step per
+      super-block (&gamma;) and widens it (<i>c</i>), so the codes concentrate. GPTQ feeds each column's error to the
+      remaining columns, so the coarser grid keeps its quality.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <h4>1 &middot; Select the codes</h4>
+        <span class="where">scripts/kq_quant.py</span>
+        <p>GPTQ runs into llama.cpp's own block formats (Q4_K, Q5_K, Q6_K, IQ4_XS), so the output is a valid GGUF that
+          unmodified llama.cpp loads. One shared, widened step per super-block concentrates the codes; an optional
+          entropy term joins GPTQ's code choice.</p>
+      </div>
+      <div class="step s2">
+        <h4>2 &middot; Code them</h4>
+        <span class="where">lazyweights/bundle.py</span>
+        <p>Each matrix gets one length-limited Huffman table (11-bit codes). A 64&times;256 tile is 32 lanes of two rows,
+          with the lanes' 32-bit words interleaved, so one aligned read fetches the next word of every lane. 4-bit codes
+          are coded in pairs. Scales and minimums stay as llama.cpp stores them.</p>
+      </div>
+      <div class="step s3">
+        <h4>3 &middot; Decode on demand</h4>
+        <span class="where">hw/huff/rtl</span>
+        <p>A decode unit between the memory controller and L2 restores the packed codes, so GPU kernels run unchanged
+          and DRAM moves only coded bytes. Each lane compares an 11-bit peek against per-length limits, so there is no
+          2048-entry lookup table.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Decode unit ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">The bundle and the decode unit</h2>
+    <div class="figure-frame">
+      <img class="figure-img" src="images/lazyweights/decode_unit.png" width="1577" height="491" loading="lazy"
+           alt="(a) Bundle layout: a 64 by 256 tile of 4-bit codes split into 32 lanes, each one Huffman stream of 32-bit words interleaved in memory; (b) the decode unit: T engines of 32 lanes sharing an 8-word read port through a masked round-robin arbiter, each lane with a FIFO, a 64-bit buffer, an 11-bit peek, length-limit comparators and a symbol table">
+    </div>
+    <p class="caption has-text-centered">
+      <b>Fig. 3.</b> (a) Bundle layout: each lane is one Huffman stream of 32-bit words; the lanes' words are interleaved,
+      so one aligned read fetches the next word of every lane, and per-tile lane offsets let any tile start on its own.
+      (b) The decode unit: <i>T</i> engines of 32 lanes share an 8-word read port through a masked round-robin arbiter.
+      Each lane adds the code length's offset to index the symbol table and shifts its buffer by the length.
+    </p>
+    <div class="content" style="margin-top:1.5rem">
+      <p>
+        The runtime that runs the coded models on the Jetsons (<code>kernels/llmrt.cu</code>) fuses decode with GEMV,
+        captures each pass in CUDA graphs, and supports prompt-lookup speculation and streaming from USB&nbsp;3. Where
+        the decode unit is not in silicon, the runtime stands in for it with software decode, or with a decode-free
+        fixed-width &ldquo;twin&rdquo; whose measured time is used as the unit's.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Results ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Results</h2>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-num">5.7&ndash;31.4%</div><div class="stat-label">smaller than the best llama.cpp format at 1% and 3.5% perplexity budgets</div></div>
+      <div class="stat"><div class="stat-num">&minus;36% / &minus;38%</div><div class="stat-label">Orin latency / energy per token with the decode unit (&minus;54% / &minus;44% with speculation)</div></div>
+      <div class="stat"><div class="stat-num">6.6&times;</div><div class="stat-label">faster streamed Mistral-7B on the 4&nbsp;GB Jetson Nano, at 3.89 bits per weight</div></div>
+      <div class="stat"><div class="stat-num">0.21&nbsp;mm<sup>2</sup></div><div class="stat-label">four-engine decoder at 1&nbsp;GHz in 7&nbsp;nm, bit-exact on an AMD ZCU102 FPGA</div></div>
+    </div>
+
+    <div class="tabbar" role="tablist" aria-label="Result tables">
+      <button class="tab-btn" role="tab" id="tab-orin" aria-controls="panel-orin" aria-selected="true">Orin Nano Super</button>
+      <button class="tab-btn" role="tab" id="tab-nano" aria-controls="panel-nano" aria-selected="false" tabindex="-1">Jetson Nano</button>
+      <button class="tab-btn" role="tab" id="tab-acc" aria-controls="panel-acc" aria-selected="false" tabindex="-1">Task accuracy</button>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-orin" aria-labelledby="tab-orin">
+      <div class="table-container">
+        <table class="table results is-narrow">
+          <thead>
+            <tr><th rowspan="2">Model</th><th rowspan="2">Budget</th><th rowspan="2">Format</th><th class="num" rowspan="2">b/w</th><th class="num" rowspan="2">&Delta;PPL</th><th class="num" rowspan="2">Saving</th><th class="span" colspan="3">Greedy</th><th class="span" colspan="3">Prompt-lookup speculation</th></tr>
+            <tr><th class="num">ms / mJ</th><th class="num">&Delta;t</th><th class="num">&Delta;E</th><th class="num">ms / mJ</th><th class="num">&Delta;t</th><th class="num">&Delta;E</th></tr>
+          </thead>
+          <tbody>
+            <tr class="ref"><td class="group" rowspan="4">Phi-3-mini</td><td rowspan="2">&le;1%</td><td>IQ4_XS + imatrix</td><td class="num">4.311</td><td class="num">+0.65%</td><td class="num"></td><td class="num">35.0 / 691</td><td class="num"></td><td class="num"></td><td class="num">27.4 / 495</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>4.046</b></td><td class="num">+0.11%</td><td class="num"><b>6.2%</b></td><td class="num"><b>31.4 / 627</b></td><td class="num">&minus;15/&minus;10%</td><td class="num">&minus;9%</td><td class="num"><b>17.9 / 366</b></td><td class="num">&minus;39/&minus;35%</td><td class="num">&minus;26%</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>Q3_K_M + imatrix</td><td class="num">4.108</td><td class="num">+2.91%</td><td class="num"></td><td class="num">44.0 / 840</td><td class="num"></td><td class="num"></td><td class="num">27.6 / 512</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.649</b></td><td class="num">+2.97%</td><td class="num"><b>11.2%</b></td><td class="num"><b>31.4 / 616</b></td><td class="num">&minus;37/&minus;29%</td><td class="num">&minus;27%</td><td class="num"><b>18.3 / 370</b></td><td class="num">&minus;42/&minus;34%</td><td class="num">&minus;28%</td></tr>
+
+            <tr class="ref"><td class="group" rowspan="4">Mistral-7B</td><td rowspan="2">&le;1%</td><td>Q5_K_M</td><td class="num">5.668</td><td class="num">+0.44%</td><td class="num"></td><td class="num">83.3 / 1784</td><td class="num"></td><td class="num"></td><td class="num">61.6 / 1276</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.886</b></td><td class="num">+0.94%</td><td class="num"><b>31.4%</b></td><td class="num"><b>53.0 / 1107</b></td><td class="num">&minus;41/&minus;36%</td><td class="num">&minus;38%</td><td class="num"><b>41.5 / 871</b></td><td class="num">&minus;37/&minus;33%</td><td class="num">&minus;32%</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>IQ3_M + imatrix</td><td class="num">3.628</td><td class="num">+1.01%</td><td class="num"></td><td class="num">77.7 / 1611</td><td class="num"></td><td class="num"></td><td class="num">71.6 / 1397</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.422</b></td><td class="num">+1.46%</td><td class="num"><b>5.7%</b></td><td class="num"><b>52.9 / 1068</b></td><td class="num">&minus;44/&minus;32%</td><td class="num">&minus;34%</td><td class="num"><b>38.5 / 786</b></td><td class="num">&minus;56/&minus;46%</td><td class="num">&minus;44%</td></tr>
+
+            <tr class="ref"><td class="group" rowspan="4">SmolLM-1.7B</td><td rowspan="2">&le;1%</td><td>Q5_K_M</td><td class="num">5.721</td><td class="num">+0.65%</td><td class="num"></td><td class="num">26.4 / 481</td><td class="num"></td><td class="num"></td><td class="num">14.3 / 246</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>5.162</b></td><td class="num">+0.88%</td><td class="num"><b>9.8%</b></td><td class="num"><b>18.6 / 356</b></td><td class="num">&minus;33/&minus;29%</td><td class="num">&minus;26%</td><td class="num"><b>10.1 / 194</b></td><td class="num">&minus;33/&minus;29%</td><td class="num">&minus;21%</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>IQ4_XS + imatrix</td><td class="num">4.388</td><td class="num">+3.09%</td><td class="num"></td><td class="num">23.7 / 375</td><td class="num"></td><td class="num"></td><td class="num">16.5 / 254</td><td class="num"></td><td class="num"></td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.934</b></td><td class="num">+3.27%</td><td class="num"><b>10.3%</b></td><td class="num"><b>15.3 / 287</b></td><td class="num">&minus;40/&minus;36%</td><td class="num">&minus;23%</td><td class="num"><b>7.6 / 143</b></td><td class="num">&minus;57/&minus;54%</td><td class="num">&minus;44%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption has-text-centered">
+        Operating points on the Jetson Orin Nano Super (Table III). The upper row of each pair is the llama.cpp budget
+        baseline in its own format. b/w counts all overheads; &Delta;PPL is WikiText-2 against fp16; saving is
+        1&nbsp;&minus;&nbsp;<i>b</i><sub>ours</sub>/<i>b</i><sub>llama.cpp</sub>. Times and energies are per token, and
+        each runtime uses its own drafter. LazyWeights runs with the decode unit at the measured twin time; &Delta;t is
+        bandwidth-bound / conservative, and &Delta;E assumes a clock-gated decoder.
+      </p>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-nano" aria-labelledby="tab-nano" hidden>
+      <div class="table-container">
+        <table class="table results is-narrow">
+          <thead>
+            <tr><th>Mode</th><th>Model</th><th>Budget</th><th class="num">CPU, baseline</th><th class="num">CPU, LazyWeights GGUF</th><th class="num">GPU, software</th><th class="num">GPU, + unit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="group" rowspan="6">Greedy</td><td rowspan="2">Phi-3</td><td>&le;1%</td><td class="num">657 / 4.48</td><td class="num">654 / 4.40</td><td class="num">591 / 4.24</td><td class="num"><b>261 / 2.05</b></td></tr>
+            <tr><td>&le;3.5%</td><td class="num">736 / 4.80</td><td class="num">663 / 4.45</td><td class="num">590 / 4.46</td><td class="num"><b>263 / 2.08</b></td></tr>
+            <tr><td rowspan="2">SmolLM</td><td>&le;1%</td><td class="num">366 / 2.47</td><td class="num">364 / 2.21</td><td class="num">484 / 3.22</td><td class="num"><b>152 / 1.17</b></td></tr>
+            <tr><td>&le;3.5%</td><td class="num">317 / 2.12</td><td class="num">317 / 2.03</td><td class="num">289 / 2.10</td><td class="num"><b>134 / 0.97</b></td></tr>
+            <tr><td rowspan="2">Mistral</td><td>&le;1%</td><td class="num">22.6 / 71.2</td><td class="num">18.0 / 58.3</td><td class="num"><b>3.40 / 15.8</b></td><td class="num">n/a</td></tr>
+            <tr><td>&le;3.5%</td><td class="num"><b>1.93</b> / 12.7</td><td class="num">15.1 / 49.0</td><td class="num">2.08 / <b>12.0</b></td><td class="num">n/a</td></tr>
+            <tr><td class="group" rowspan="6">Prompt-lookup<br>speculation</td><td rowspan="2">Phi-3</td><td>&le;1%</td><td class="num">840 / 5.60</td><td class="num">865 / 5.74</td><td class="num">423 / 2.94</td><td class="num"><b>244 / 1.71</b></td></tr>
+            <tr><td>&le;3.5%</td><td class="num">956 / 6.23</td><td class="num">864 / 5.74</td><td class="num">415 / 3.05</td><td class="num"><b>239 / 1.69</b></td></tr>
+            <tr><td rowspan="2">SmolLM</td><td>&le;1%</td><td class="num">475 / 3.10</td><td class="num">437 / 2.66</td><td class="num">286 / 1.84</td><td class="num"><b>141 / 0.91</b></td></tr>
+            <tr><td>&le;3.5%</td><td class="num">419 / 2.73</td><td class="num">469 / 2.94</td><td class="num">170 / 1.17</td><td class="num"><b>101 / 0.65</b></td></tr>
+            <tr><td rowspan="2">Mistral</td><td>&le;1%</td><td class="num">16.7 / 56.6</td><td class="num">13.3 / 46.1</td><td class="num"><b>2.30 / 11.3</b></td><td class="num">n/a</td></tr>
+            <tr><td>&le;3.5%</td><td class="num">2.90 / 19.1</td><td class="num">11.5 / 40.2</td><td class="num"><b>1.49 / 8.85</b></td><td class="num">n/a</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption has-text-centered">
+        Jetson Nano, per token (Table IV): ms / J, except Mistral, which is s / J. CPU is llama.cpp with the budget
+        baseline or our GGUF; GPU is our runtime, decoding in software or with the unit (twin time). Mistral-7B does not
+        fit in 4&nbsp;GB, so it streams from USB&nbsp;3 at a 2560&nbsp;MB resident budget, and its twin is no proxy for
+        the unit.
+      </p>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-acc" aria-labelledby="tab-acc" hidden>
+      <div class="table-container">
+        <table class="table results is-narrow">
+          <thead>
+            <tr><th>Model</th><th>Budget</th><th>Format</th><th class="num">b/w</th><th class="num">HellaSwag</th><th class="num">ARC-e</th><th class="num">PIQA</th><th class="num">GSM8K</th></tr>
+          </thead>
+          <tbody>
+            <tr class="ref"><td class="group" rowspan="4">Phi-3-mini</td><td rowspan="2">&le;1%</td><td>IQ4_XS + imatrix</td><td class="num">4.311</td><td class="num">.783</td><td class="num">.807</td><td class="num">.798</td><td class="num">.785</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>4.046</b></td><td class="num">.778</td><td class="num">.803</td><td class="num">.789</td><td class="num">.773</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>Q3_K_M + imatrix</td><td class="num">4.108</td><td class="num">.776</td><td class="num">.786</td><td class="num">.799</td><td class="num">.779</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.649</b></td><td class="num">.774</td><td class="num">.811</td><td class="num">.796</td><td class="num">.770</td></tr>
+            <tr class="ref"><td class="group" rowspan="4">Mistral-7B</td><td rowspan="2">&le;1%</td><td>Q5_K_M</td><td class="num">5.668</td><td class="num">.842</td><td class="num">.716</td><td class="num">.768</td><td class="num">.425</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.886</b></td><td class="num">.840</td><td class="num">.720</td><td class="num">.770</td><td class="num">.402</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>IQ3_M + imatrix</td><td class="num">3.628</td><td class="num">.838</td><td class="num">.722</td><td class="num">.779</td><td class="num">.400</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.422</b></td><td class="num">.838</td><td class="num">.719</td><td class="num">.782</td><td class="num">.368</td></tr>
+            <tr class="ref"><td class="group" rowspan="4">SmolLM-1.7B</td><td rowspan="2">&le;1%</td><td>Q5_K_M</td><td class="num">5.721</td><td class="num">.607</td><td class="num">.633</td><td class="num">.737</td><td class="num">.064</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>5.162</b></td><td class="num">.607</td><td class="num">.630</td><td class="num">.739</td><td class="num">.067</td></tr>
+            <tr class="ref"><td rowspan="2">&le;3.5%</td><td>IQ4_XS + imatrix</td><td class="num">4.388</td><td class="num">.605</td><td class="num">.625</td><td class="num">.732</td><td class="num">.055</td></tr>
+            <tr class="ours"><td><b>LazyWeights</b></td><td class="num"><b>3.934</b></td><td class="num">.601</td><td class="num">.610</td><td class="num">.736</td><td class="num">.055</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="caption has-text-centered">
+        Task accuracy at the same operating points (Table III), with lm-eval. GSM8K is 8-shot chain of thought with
+        flexible extraction.
+      </p>
+    </div>
+
+    <div class="figure-frame" style="margin-top:2.5rem">
+      <img class="figure-img" src="images/lazyweights/frontier.png" width="1432" height="410" loading="lazy"
+           alt="Rate-quality frontiers of LazyWeights and llama.cpp on Phi-3-mini, Mistral-7B and SmolLM-1.7B: LazyWeights reaches each perplexity level at fewer total bits per weight">
+    </div>
+    <p class="caption has-text-centered">
+      <b>Fig. 4.</b> Rate&ndash;quality frontiers. Dots are coded models, including llama.cpp's imatrix codes behind our
+      Huffman stage. Lines show the lowest &Delta;PPL reachable at or below a rate, and shading marks where coding wins.
+      Rings are the released operating points; dashed lines are the 1% and 3.5% budgets and fp16.
+    </p>
+
+    <div class="figure-frame" style="margin-top:2rem">
+      <img class="figure-img" src="images/lazyweights/strip.png" width="1432" height="390" loading="lazy"
+           alt="(a) Per-step speedup and energy factors from the llama.cpp baseline to LazyWeights on the Orin and the Nano; (b) software decode rates, and decode-unit area against rate for Huffman and rANS">
+    </div>
+    <p class="caption has-text-centered">
+      <b>Fig. 5.</b> (a) Factors from the llama.cpp baseline (greedy) to LazyWeights with the unit and our drafter. Each
+      step makes one change and is drawn on a log scale; the top half is the Orin and the bottom half the Nano.
+      (b) Decode rate: software decoders on the left; on the right, ASAP7 area against rate for 1&ndash;16 engines, with
+      Huffman compared to rANS. Bands show the rate each device's DRAM delivers.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ Hardware ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Decoder hardware</h2>
+    <div class="columns">
+      <div class="column is-7">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead>
+              <tr><th rowspan="2">Block</th><th class="span" colspan="3">ASAP7, 1 GHz</th><th class="span" colspan="2">Nangate45, 500 MHz</th></tr>
+              <tr><th class="num">&micro;m<sup>2</sup></th><th class="num">mW</th><th class="num">slack</th><th class="num">&micro;m<sup>2</sup></th><th class="num">slack</th></tr>
+            </thead>
+            <tbody>
+              <tr class="ours"><td>Comparator lane</td><td class="num"><b>1,566</b></td><td class="num"><b>3.59</b></td><td class="num">+117 ps</td><td class="num">23,462</td><td class="num">+0.5 ns</td></tr>
+              <tr><td>Table lane (2048 entries)</td><td class="num">14,076</td><td class="num">94.4</td><td class="num">&minus;31 ns</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
+              <tr class="ours"><td>Arbiter, 32 lanes</td><td class="num"><b>1,443</b></td><td class="num"><b>0.83</b></td><td class="num">met&dagger;</td><td class="num">18,639</td><td class="num">+1.5 ns</td></tr>
+              <tr><td>Arbiter, 64 lanes</td><td class="num">9,174</td><td class="num">&ndash;</td><td class="num">&minus;0.29 ns</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
+              <tr class="ours"><td><b>Engine</b> (32 lanes + arbiter)</td><td class="num"><b>51,550</b></td><td class="num"><b>115.7</b></td><td class="num">&ndash;</td><td class="num">&ndash;</td><td class="num">&ndash;</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">
+          Logic synthesis, pre-layout (Table V). &dagger; after OpenROAD repair. The Orin's four-engine unit is
+          0.206&nbsp;mm<sup>2</sup>; the Nano needs one engine.
+        </p>
+      </div>
+      <div class="column">
+        <div class="content">
+          <p>
+            <b>Comparators, not tables.</b> A 2048-entry lookup table per lane is nine times the area of a lane that
+            compares an 11-bit peek against per-length limits, and it misses timing by 31&nbsp;ns.
+          </p>
+          <p>
+            <b>Huffman over rANS.</b> rANS is never smaller (0.0 to +1.0% more bits), and at equal throughput
+            (2&nbsp;G weights/s) it needs 4.0&times; the area with pair symbols, or 1.15&times; with single codes.
+          </p>
+          <p>
+            <b>On an FPGA, bit for bit.</b> On the AMD ZCU102, four engines close timing at 112.5&nbsp;MHz. All 29
+            matrices (484M weights) decode bit-exact, with cycle, stall and word counts equal to the C model on every
+            chunk: 14.3&nbsp;G weights/s at 0.26&nbsp;nJ per weight.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Ablations ============================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">What each piece is worth</h2>
+    <div class="columns">
+      <div class="column">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Model</th><th>Budget</th><th class="num">Full</th><th class="num">&gamma; = 0</th><th class="num">RTN</th></tr></thead>
+            <tbody>
+              <tr><td class="group">Phi-3</td><td>&le;3.5%</td><td class="num"><b>3.649</b>, +2.97</td><td class="num">4.046, +0.11</td><td class="num">3.646, +12.07</td></tr>
+              <tr><td class="group" rowspan="2">Mistral</td><td>&le;1%</td><td class="num"><b>3.886</b>, +0.94</td><td class="num">4.241, +0.32</td><td class="num">3.886, &minus;0.04</td></tr>
+              <tr><td>&le;3.5%</td><td class="num"><b>3.422</b>, +1.46</td><td class="num">3.837, +2.61</td><td class="num">3.422, +2.78</td></tr>
+              <tr><td class="group" rowspan="2">SmolLM</td><td>&le;1%</td><td class="num"><b>5.162</b>, +0.88</td><td class="num">5.621, +0.31</td><td class="num">5.162, +0.57</td></tr>
+              <tr><td>&le;3.5%</td><td class="num"><b>3.934</b>, +3.27</td><td class="num">4.321, +2.24</td><td class="num">3.934, +6.14</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">
+          Ablations (Table VI): b/w, &Delta;PPL (%) at the operating-point settings. &gamma;&nbsp;=&nbsp;0 uses
+          llama.cpp's own per-sub-block fit; RTN replaces GPTQ with round-to-nearest on the same grid.
+        </p>
+      </div>
+      <div class="column">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Runtime change</th><th>Measured on</th><th class="num">Before &rarr; after</th></tr></thead>
+            <tbody>
+              <tr><td rowspan="2">Speculative attention</td><td>SmolLM, 8-token pass</td><td class="num">44.4 &rarr; 31.2 ms</td></tr>
+              <tr><td>Phi-3, 8-token pass</td><td class="num">77.5 &rarr; 52.5 ms</td></tr>
+              <tr><td rowspan="3">Nano kernels</td><td>SmolLM &le;1%</td><td class="num">474 &rarr; 152 ms</td></tr>
+              <tr><td>SmolLM &le;3.5%</td><td class="num">282 &rarr; 134 ms</td></tr>
+              <tr><td>Phi-3</td><td class="num">585 &rarr; 261 ms</td></tr>
+              <tr><td>Ordered reduction</td><td>Nano, 2-token pass</td><td class="num">418 &rarr; 301 ms</td></tr>
+              <tr><td>CUDA graphs</td><td>Orin, per greedy token</td><td class="num">&minus;6 to &minus;11%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">Runtime optimizations (Table II), each measured before and after the change.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ Models ============================ -->
+<section class="section alt">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Models and code</h2>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="table-container">
+          <table class="table results is-narrow is-fullwidth">
+            <thead><tr><th>Model</th><th>Hugging Face repository</th><th>Points (&le;1% / &le;3.5%)</th></tr></thead>
+            <tbody>
+              <tr><td>Phi-3-mini-4k-instruct</td><td><a href="https://huggingface.co/arnabsanyal/LazyWeights-Phi-3-mini-4k-instruct" target="_blank" rel="noopener">LazyWeights-Phi-3-mini-4k-instruct</a></td><td><code>IQ4_XS_g0_lam0_c1.25</code> / <code>IQ4_XS_g1_lam0_c1.25</code></td></tr>
+              <tr><td>Mistral-7B-Instruct-v0.2</td><td><a href="https://huggingface.co/arnabsanyal/LazyWeights-Mistral-7B-Instruct-v0.2" target="_blank" rel="noopener">LazyWeights-Mistral-7B-Instruct-v0.2</a></td><td><code>IQ4_XS_g1_lam0</code> / <code>IQ4_XS_g1_lam0_c1.5</code></td></tr>
+              <tr><td>SmolLM-1.7B-Instruct</td><td><a href="https://huggingface.co/arnabsanyal/LazyWeights-SmolLM-1.7B-Instruct" target="_blank" rel="noopener">LazyWeights-SmolLM-1.7B-Instruct</a></td><td><code>Q5_K_M_g1_lam0</code> / <code>IQ4_XS_g1_lam0</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="content">
+          <p>
+            Each operating point comes in two forms: a GGUF that runs in unmodified llama.cpp, and its coded runtime
+            bundle for the CUDA runtime. The <a href="https://github.com/arnabsanyal/LazyWeights" target="_blank" rel="noopener">code repository</a>
+            reproduces every table and figure, from GPTQ and the llama.cpp baselines through the Jetson runs to the RTL,
+            synthesis and FPGA build; the raw Jetson logs are a
+            <a href="https://github.com/arnabsanyal/LazyWeights/releases" target="_blank" rel="noopener">release asset</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ BibTeX ============================ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title is-3">BibTeX</h2>
+<pre><button id="copy-bib" class="button is-small" type="button">Copy</button><code id="bibtex">@misc{sanyal2026lazyweightsdecodeondemandedgellms,
+  title         = {LazyWeights: Decode-on-Demand Edge LLMs},
+  author        = {Sanyal, Arnab and Datta, Gourav and Chinchali, Sandeep P.},
+  year          = {2026},
+  eprint        = {2611.17108},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  url           = {https://arxiv.org/abs/2611.17108}
+}</code></pre>
+  </div>
+</section>
+
+<!-- ============================ Footer ============================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p><a href="../"><i class="fas fa-home"></i> Back to Arnab Sanyal's homepage</a></p>
+      <p class="is-size-7">
+        Page layout adapted from the
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page Template</a>,
+        based on the <a href="https://nerfies.github.io" target="_blank" rel="noopener">Nerfies</a> project page, licensed under
+        <a rel="license noopener" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // BibTeX copy
+  document.getElementById('copy-bib').addEventListener('click', function () {
+    var btn = this, text = document.getElementById('bibtex').innerText;
+    navigator.clipboard.writeText(text).then(function () {
+      btn.textContent = 'Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  // Accessible tabs: each [role=tablist] controls the panels named by its buttons' aria-controls.
+  document.querySelectorAll('[role="tablist"]').forEach(function (list) {
+    var tabs = Array.prototype.slice.call(list.querySelectorAll('[role="tab"]'));
+    function select(tab) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', on);
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+      });
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        var next = tabs[(i + d + tabs.length) % tabs.length];
+        select(next); next.focus(); e.preventDefault();
+      });
+    });
+  });
+</script>
+</body>
+</html>
