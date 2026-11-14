@@ -188,19 +188,19 @@
             <h3><span class="num">01</span>Post-Training Quantization &amp; Number Formats</h3>
             <span class="tagline">Choosing the format, not just the scale</span>
             <p>Quantization that adapts to the distribution it encodes. Number formats (INT, FP8, MX, NF4) are chosen per weight channel and per diffusion timestep, LLM weights use mixed unsigned/asymmetric quantization, and GPTQ is steered so llama.cpp&rsquo;s integer codes compress. None of it needs retraining.</p>
-            <div class="papers"><a href="#pub-lazyweights" data-show-area="ptq">LazyWeights · preprint</a><a href="#pub-chameleon" data-show-area="ptq">Chameleon · under review</a><a href="#pub-entrollm" data-show-area="ptq">EntroLLM · ICASSP 2026</a></div>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="ptq">LazyWeights · under review</a><a href="#pub-chameleon" data-show-area="ptq">Chameleon · under review</a><a href="#pub-entrollm" data-show-area="ptq">EntroLLM · ICASSP 2026</a></div>
           </article>
           <article class="area">
             <h3><span class="num">02</span>Entropy-Coded Model Compression</h3>
             <span class="tagline">Bits that are cheaper to move</span>
             <p>Quantized weights and representations treated as a source to code: entropy-reducing quantization, Huffman coding and parallel decoding, in software or on demand in hardware, that cut storage and memory bandwidth on bandwidth-starved devices.</p>
-            <div class="papers"><a href="#pub-lazyweights" data-show-area="compression">LazyWeights</a><a href="#pub-entrollm" data-show-area="compression">EntroLLM</a><a href="#pub-entromcu" data-show-area="compression">EntroMCU</a><a href="#pub-oasis" data-show-area="compression">OASIS</a><a href="#pub-halrc" data-show-area="compression">In-sensor compression</a></div>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="compression">LazyWeights · under review</a><a href="#pub-entrollm" data-show-area="compression">EntroLLM · ICASSP 2026</a><a href="#pub-entromcu" data-show-area="compression">EntroMCU · ISVLSI 2026</a><a href="#pub-oasis" data-show-area="compression">OASIS · ISVLSI 2026</a><a href="#pub-halrc" data-show-area="compression">In-sensor compression · IEEE TETC (under review)</a></div>
           </article>
           <article class="area">
             <h3><span class="num">03</span>Hardware&ndash;Algorithm Co-design</h3>
             <span class="tagline">From kernels to microcontrollers</span>
             <p>Algorithms shaped by their silicon: a Huffman decode unit between DRAM and L2 for edge GPUs, ternary GEMM kernels and KV-aware SRAM/Flash management for LLMs on Cortex-M microcontrollers, and multiplication-free, log-domain training for accelerators.</p>
-            <div class="papers"><a href="#pub-lazyweights" data-show-area="edge">LazyWeights · preprint</a><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM</a></div>
+            <div class="papers"><a href="#pub-lazyweights" data-show-area="edge">LazyWeights · under review</a><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM · ICASSP 2026</a></div>
           </article>
           <article class="area wide">
             <h3><span class="num">04</span>Efficient Perception: In-Sensor &amp; Video</h3>
@@ -228,7 +228,7 @@
         <article class="pub" id="pub-lazyweights" data-areas="ptq compression edge">
           <a class="pub-thumb" href="preprint/lazyweights.html" tabindex="-1" aria-hidden="true"><img src="images/portfolio/under_review_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
           <div>
-            <div class="pub-meta"><span class="badge pre">Preprint</span><span class="badge venue">arXiv</span></div>
+            <div class="pub-meta"><span class="badge rev">Under review</span><span class="badge venue">arXiv</span></div>
             <h3><a href="preprint/lazyweights.html">LazyWeights: Decode-on-Demand Edge LLMs</a></h3>
             <p class="authors"><span class="me">Arnab Sanyal</span>, Gourav Datta, and Sandeep P. Chinchali</p>
             <p class="venue-line">Preprint, <a href="https://arxiv.org/abs/2611.17108" target="_blank" rel="noopener">arXiv:2611.17108</a></p>
@@ -589,7 +589,7 @@
           <div class="skill-row">
             <h3>Efficient AI<small>compression &amp; quantization</small></h3>
             <ul class="chips">
-              <li class="key">Post-training quantization</li><li class="key">FP8 / MX / INT4 / NF4 formats</li><li>Quantization-aware training</li><li>GPTQ · AWQ · SmoothQuant</li><li>Mixed precision</li><li class="key">Entropy &amp; Huffman coding</li><li>Pruning &amp; sparsity</li><li>Knowledge distillation</li><li>KV-cache optimization</li><li>Logarithmic number systems</li>
+              <li class="key">Post-training quantization</li><li class="key">FP8 / MX / INT4 / NF4 formats</li><li>Quantization-aware training</li><li>GPTQ · AWQ · SmoothQuant</li><li>Mixed precision</li><li class="key">Entropy coding (Huffman, rANS)</li><li>Pruning &amp; sparsity</li><li>Knowledge distillation</li><li>KV-cache optimization</li><li>Speculative decoding (prompt lookup)</li><li>Logarithmic number systems</li>
             </ul>
           </div>
           <div class="skill-row">
@@ -601,13 +601,13 @@
           <div class="skill-row">
             <h3>Kernels &amp; accelerators<small>where the bits land</small></h3>
             <ul class="chips">
-              <li class="key">CUDA kernels</li><li>Triton</li><li class="key">AMD AI Engine (AIE)</li><li class="key">Qualcomm Hexagon HTP / HVX</li><li>Amazon AZ1 NPU</li><li>Arm Cortex-M · CMSIS-NN · Helium</li><li>NVIDIA Jetson</li><li>FPGA (Verilog, HLS)</li><li>OpenMP</li><li>OpenCL</li>
+              <li class="key">CUDA kernels</li><li>Triton</li><li class="key">AMD AI Engine (AIE)</li><li class="key">Qualcomm Hexagon HTP / HVX</li><li>Amazon AZ1 NPU</li><li>Arm Cortex-M · CMSIS-NN · Helium</li><li>NVIDIA Jetson (Nano, Orin)</li><li>FPGA (Verilog, HLS, Zynq UltraScale+)</li><li>RTL &amp; ASIC flow (Yosys, OpenSTA, OpenROAD, ASAP7)</li><li>OpenMP</li><li>OpenCL</li>
             </ul>
           </div>
           <div class="skill-row">
             <h3>Frameworks<small>training &amp; deployment</small></h3>
             <ul class="chips">
-              <li class="key">PyTorch</li><li>TensorFlow</li><li>ONNX / ONNX Runtime</li><li>TensorRT</li><li>Hugging Face Transformers &amp; Diffusers</li>
+              <li class="key">PyTorch</li><li>TensorFlow</li><li>ONNX / ONNX Runtime</li><li>TensorRT</li><li class="key">llama.cpp / GGUF (K- &amp; I-quants)</li><li>Hugging Face Transformers &amp; Diffusers</li><li>lm-evaluation-harness</li>
             </ul>
           </div>
           <div class="skill-row">
@@ -625,7 +625,7 @@
           <div class="skill-row">
             <h3>Tools</h3>
             <ul class="chips">
-              <li>Linux</li><li>Git</li><li>Docker</li><li>CMake / Bazel</li><li>Slurm &amp; HPC clusters</li><li>Nsight &amp; on-device profilers</li>
+              <li>Linux</li><li>Git</li><li>Docker</li><li>CMake / Bazel</li><li>Slurm &amp; HPC clusters</li><li>Nsight &amp; on-device profilers</li><li>Vivado</li><li>Verilator · Icarus Verilog</li>
             </ul>
           </div>
         </div>
