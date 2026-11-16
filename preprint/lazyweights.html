@@ -102,6 +102,13 @@
     .tab-btn:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
     .tab-panel[hidden] { display: none; }
 
+    /* ---------- demo videos ---------- */
+    .video-frame { background: var(--ink); border-radius: 8px; overflow: hidden; }
+    .video-frame iframe { border: 0; }
+    .demo-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; margin-top: .8rem; font-size: .92rem; }
+    .demo-facts span { white-space: nowrap; }
+    .demo-facts b { color: var(--ink); }
+
     /* ---------- tables ---------- */
     .table-container { margin: 0 auto; }
     table.results { font-size: .92rem; margin: 0 auto; }
@@ -151,6 +158,9 @@
         </a>
         <a href="https://github.com/arnabsanyal/LazyWeights/releases" target="_blank" rel="noopener" class="button is-rounded">
           <span class="icon"><i class="fas fa-box-archive"></i></span><span>Device logs</span>
+        </a>
+        <a href="#Demo" class="button is-rounded">
+          <span class="icon"><i class="fab fa-youtube"></i></span><span>Demo</span>
         </a>
         <a href="#BibTeX" class="button is-rounded">
           <span class="icon"><i class="fas fa-quote-right"></i></span><span>BibTeX</span>
@@ -422,8 +432,92 @@
   </div>
 </section>
 
+<!-- ============================ Demo ============================ -->
+<section class="section alt" id="Demo">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title">Demo</h2>
+    <div class="content">
+      <p>
+        The runtime from the tables, running on the two Jetsons. In each race, llama.cpp (left, in its best format
+        within the &le;1% perplexity budget) and LazyWeights (right) answer the same prompt on the same board. The two
+        cannot share a board without slowing each other down, so each ran alone with every piece of its output
+        timestamped, and the side-by-side is a replay at the recorded timing. Title cards name the model, the formats
+        and the playback speed.
+      </p>
+      <p>
+        There is no decode unit in silicon yet, so LazyWeights runs the fixed-width twin: the same codes as the GPU
+        would receive from the unit, whose measured time the tables use as the unit's. The exception is Mistral-7B on the
+        4&nbsp;GB Nano, which does not fit in memory: there LazyWeights runs the real Huffman-coded model, decoded in
+        software on the GPU and streamed from USB&nbsp;3. Speeds below are per generated token in these recordings; they
+        differ a little from the tables, which average the paper's own prompts.
+      </p>
+    </div>
+
+    <div class="tabbar" role="tablist" aria-label="Demo videos">
+      <button class="tab-btn" role="tab" id="tab-demo-orin" aria-controls="panel-demo-orin" aria-selected="true">Orin Nano Super races</button>
+      <button class="tab-btn" role="tab" id="tab-demo-nano" aria-controls="panel-demo-nano" aria-selected="false" tabindex="-1">Jetson Nano races</button>
+      <button class="tab-btn" role="tab" id="tab-demo-chat" aria-controls="panel-demo-chat" aria-selected="false" tabindex="-1">Mistral-7B chats</button>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-demo-orin" aria-labelledby="tab-demo-orin">
+      <figure class="image is-16by9 video-frame">
+        <iframe class="has-ratio" src="https://www.youtube-nocookie.com/embed/lPSeATBfFnQ?rel=0&amp;enablejsapi=1"
+                title="LazyWeights vs llama.cpp on the Jetson Orin Nano Super" loading="lazy"
+                allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+      </figure>
+      <div class="demo-facts">
+        <span>SmolLM-1.7B: 26 &rarr; <b>17&nbsp;ms/token</b> (1.5&times;)</span>
+        <span>Phi-3-mini + speculation: 36 &rarr; <b>26&nbsp;ms/token</b> (1.4&times;)</span>
+        <span>Mistral-7B + speculation: 82 &rarr; <b>57&nbsp;ms/token</b> (1.4&times;)</span>
+      </div>
+      <p class="caption has-text-centered">
+        Jetson Orin Nano Super (8&nbsp;GB, MAXN_SUPER), real time: both runtimes on the GPU, llama.cpp with its CUDA
+        kernels, and with prompt-lookup speculation each with its own drafter. The bits per weight shown for
+        LazyWeights are the coded model's; the twin still reads fixed-width codes, so these times are the conservative
+        estimate for the unit, which would also read fewer bytes.
+      </p>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-demo-nano" aria-labelledby="tab-demo-nano" hidden>
+      <figure class="image is-16by9 video-frame">
+        <iframe class="has-ratio" src="https://www.youtube-nocookie.com/embed/sWUIxGq8D_o?rel=0&amp;enablejsapi=1"
+                title="LazyWeights vs llama.cpp on the Jetson Nano" loading="lazy"
+                allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+      </figure>
+      <div class="demo-facts">
+        <span>SmolLM-1.7B: 302 &rarr; <b>125&nbsp;ms/token</b> (2.4&times;)</span>
+        <span>Phi-3-mini: 534 &rarr; <b>222&nbsp;ms/token</b> (2.4&times;)</span>
+        <span>Mistral-7B, streamed: 24.8 &rarr; <b>3.5&nbsp;s/token</b> (7.1&times;)</span>
+      </div>
+      <p class="caption has-text-centered">
+        Jetson Nano (4&nbsp;GB, MAXN), greedy. llama.cpp runs on the 4-core CPU, since its CUDA backend no longer builds
+        for the Nano's last JetPack; LazyWeights runs on the GPU. Mistral-7B streams from USB&nbsp;3 on both sides,
+        LazyWeights as its 3.89-bit coded model with 2560&nbsp;MB resident, and is played at 8&times; speed.
+      </p>
+    </div>
+
+    <div class="tab-panel" role="tabpanel" id="panel-demo-chat" aria-labelledby="tab-demo-chat" hidden>
+      <figure class="image is-16by9 video-frame">
+        <iframe class="has-ratio" src="https://www.youtube-nocookie.com/embed/yaphamQBBAo?rel=0&amp;enablejsapi=1"
+                title="Chatting with Mistral-7B on Jetson, with LazyWeights" loading="lazy"
+                allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+      </figure>
+      <div class="demo-facts">
+        <span>Orin Nano Super: <b>46&ndash;58&nbsp;ms/token</b> (twin, speculation)</span>
+        <span>Jetson Nano: <b>3.44&nbsp;s/token</b> (coded, streamed)</span>
+      </div>
+      <p class="caption has-text-centered">
+        Multi-turn chat with Mistral-7B at the &le;1% point (3.886 bits per weight) over SSH. The runtime keeps the
+        conversation between turns and prints its speed after each reply; a script types the messages, and the replies
+        and timings are live from the board. The Nano part is played at 4&times; speed.
+      </p>
+    </div>
+
+  </div>
+</section>
+
 <!-- ============================ Hardware ============================ -->
-<section class="section alt">
+<section class="section">
   <div class="container is-max-desktop">
     <h2 class="title is-3 section-title">Decoder hardware</h2>
     <div class="columns">
@@ -470,7 +564,7 @@
 </section>
 
 <!-- ============================ Ablations ============================ -->
-<section class="section">
+<section class="section alt">
   <div class="container is-max-desktop">
     <h2 class="title is-3 section-title">What each piece is worth</h2>
     <div class="columns">
@@ -514,7 +608,7 @@
 </section>
 
 <!-- ============================ Models ============================ -->
-<section class="section alt">
+<section class="section">
   <div class="container is-max-desktop">
     <h2 class="title is-3 section-title">Models and code</h2>
     <div class="columns is-centered">
@@ -544,7 +638,7 @@
 </section>
 
 <!-- ============================ BibTeX ============================ -->
-<section class="section" id="BibTeX">
+<section class="section alt" id="BibTeX">
   <div class="container is-max-desktop content">
     <h2 class="title is-3">BibTeX</h2>
 <pre><button id="copy-bib" class="button is-small" type="button">Copy</button><code id="bibtex">@misc{sanyal2026lazyweightsdecodeondemandedgellms,
@@ -581,6 +675,16 @@
     navigator.clipboard.writeText(text).then(function () {
       btn.textContent = 'Copied';
       setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+    });
+  });
+
+  // Demo videos: pause the one whose tab is left (YouTube iframe API via postMessage, enablejsapi=1)
+  document.querySelectorAll('#Demo [role="tab"]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('#Demo iframe').forEach(function (f) {
+        if (f.closest('.tab-panel').id !== tab.getAttribute('aria-controls') && f.contentWindow)
+          f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      });
     });
   });
 
