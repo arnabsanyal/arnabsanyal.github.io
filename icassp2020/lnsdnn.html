@@ -420,7 +420,7 @@
     <div class="columns is-centered">
       <div class="column is-four-fifths">
         <div class="video-embed">
-          <iframe src="https://www.youtube-nocookie.com/embed/MN7_Jar0DSM?rel=0" title="Neural Network Training with Approximate Logarithmic Computations, ICASSP 2020 talk"
+          <iframe id="talk-video" src="https://www.youtube-nocookie.com/embed/MN7_Jar0DSM?rel=0&amp;enablejsapi=1" title="Neural Network Training with Approximate Logarithmic Computations, ICASSP 2020 talk"
                   loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         </div>
@@ -522,6 +522,18 @@ python train.py --is_training True   # train from scratch</code></pre>
       setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
     });
   });
+
+  // Talk video: pause it once it has scrolled completely out of view
+  // (YouTube iframe API via postMessage, enablejsapi=1).
+  var talk = document.getElementById('talk-video');
+  if (talk && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting && talk.contentWindow)
+          talk.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+      });
+    }).observe(talk);
+  }
 
   // Accessible tabs: each [role=tablist] controls the panels named by its buttons' aria-controls.
   document.querySelectorAll('[role="tablist"]').forEach(function (list) {
