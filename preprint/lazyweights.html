@@ -678,14 +678,16 @@
     });
   });
 
-  // Demo videos: pause the one whose tab is left (YouTube iframe API via postMessage, enablejsapi=1)
-  document.querySelectorAll('#Demo [role="tab"]').forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      document.querySelectorAll('#Demo iframe').forEach(function (f) {
-        if (f.closest('.tab-panel').id !== tab.getAttribute('aria-controls') && f.contentWindow)
-          f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-      });
+  // Demo videos: pause any video whose tab is no longer shown, however the tab changed (click or arrow keys).
+  // YouTube iframe API via postMessage, enablejsapi=1; runs after the tab code below has switched panels.
+  var demoTabs = document.querySelector('#Demo [role="tablist"]');
+  function pauseHiddenDemos() {
+    document.querySelectorAll('#Demo .tab-panel[hidden] iframe').forEach(function (f) {
+      if (f.contentWindow) f.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
     });
+  }
+  ['click', 'keydown'].forEach(function (type) {
+    demoTabs.addEventListener(type, function () { setTimeout(pauseHiddenDemos, 0); });
   });
 
   // Accessible tabs: each [role=tablist] controls the panels named by its buttons' aria-controls.
