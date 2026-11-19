@@ -45,6 +45,8 @@
     "sameAs": [
       "https://scholar.google.com/citations?user=D9ebkwoAAAAJ",
       "https://orcid.org/0000-0001-6365-6769",
+      "https://www.researchgate.net/profile/Arnab-Sanyal-4",
+      "https://www.alphaxiv.org/@arnab-sanyal",
       "https://github.com/arnabsanyal",
       "https://www.linkedin.com/in/arnabsanyal17/",
       "https://stackoverflow.com/users/7517511/senior-mle",
@@ -55,6 +57,7 @@
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-alphaxiv" viewBox="0 0 24 24"><path d="M21 5c-1.5 5.4-3.3 14-8.8 14C7.6 19 3 16 3 12 3 8 6.4 5 10.4 5c6 0 7.4 8 10.6 14"/></symbol>
     <symbol id="i-scholar" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"/><path d="M22 10v6M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></symbol>
     <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
     <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></symbol>
@@ -137,6 +140,8 @@
           <div class="btn-row">
             <a class="btn" href="https://scholar.google.com/citations?user=D9ebkwoAAAAJ" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg>Scholar</a>
             <a class="btn" href="https://orcid.org/0000-0001-6365-6769" target="_blank" rel="noopener"><i class="ai ai-orcid" aria-hidden="true"></i>ORCID</a>
+            <a class="btn" href="https://www.researchgate.net/profile/Arnab-Sanyal-4" target="_blank" rel="noopener"><i class="ai ai-researchgate" aria-hidden="true"></i>ResearchGate</a>
+            <a class="btn" href="https://www.alphaxiv.org/@arnab-sanyal" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-alphaxiv"/></svg>alphaXiv</a>
             <a class="btn" href="https://github.com/arnabsanyal" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>GitHub</a>
             <a class="btn" href="https://www.linkedin.com/in/arnabsanyal17/" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-linkedin"/></svg>LinkedIn</a>
             <a class="btn" href="https://stackoverflow.com/users/7517511/senior-mle" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-so"/></svg>Stack Overflow</a>
@@ -181,7 +186,7 @@
       <section class="section reveal" id="research" aria-labelledby="research-h">
         <h2 class="section-label" id="research-h">Research</h2>
         <div class="prose">
-          <p>I work on making generative AI cheap enough to run where it is needed: on phones, cars, image sensors and microcontrollers. My papers sit where number formats, compression and hardware meet. The four threads below group them; each one links to its papers in the list below.</p>
+          <p>I work on making generative AI cheap enough to run where it is needed: on phones, cars, image sensors, wearables and microcontrollers. My papers sit where number formats, compression and hardware meet. The four threads below group them; each one links to its papers in the list below.</p>
         </div>
         <div class="areas">
           <article class="area wide">
@@ -199,14 +204,14 @@
           <article class="area">
             <h3><span class="num">03</span>Hardware&ndash;Algorithm Co-design</h3>
             <span class="tagline">From kernels to microcontrollers</span>
-            <p>Algorithms shaped by their silicon: a Huffman decode unit between DRAM and L2 for edge GPUs, ternary GEMM kernels and KV-aware SRAM/Flash management for LLMs on Cortex-M microcontrollers, and multiplication-free, log-domain training for accelerators.</p>
-            <div class="papers"><a href="#pub-lazyweights" data-show-area="edge">LazyWeights · under review</a><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM · ICASSP 2026</a></div>
+            <p>Algorithms shaped by their silicon: a Huffman decode unit between DRAM and L2 for edge GPUs, ternary GEMM kernels and KV-aware SRAM/Flash management for LLMs on Cortex-M microcontrollers, tiled execution with Flash/SRAM/TCM-aware placement for wearable EEG, and multiplication-free, log-domain training for accelerators.</p>
+            <div class="papers"><a href="#pub-eeg2mcu" data-show-area="edge">EEG2MCU · DATE 2027</a><a href="#pub-lazyweights" data-show-area="edge">LazyWeights · under review</a><a href="#pub-entromcu" data-show-area="edge">EntroMCU · ISVLSI 2026</a><a href="#pub-lns" data-show-area="edge">Log-domain training · ICASSP 2020</a><a href="#pub-entrollm" data-show-area="edge">EntroLLM · ICASSP 2026</a></div>
           </article>
           <article class="area wide">
-            <h3><span class="num">04</span>Efficient Perception: In-Sensor &amp; Video</h3>
+            <h3><span class="num">04</span>Efficient Perception: In-Sensor, Wearable &amp; Video</h3>
             <span class="tagline">Compute where the data is born</span>
-            <p>Lightweight encoders that compress learned representations inside the image sensor before anything leaves the chip, and real-time neuro-symbolic video understanding through adaptive frame sampling and KV-cache reuse.</p>
-            <div class="papers"><a href="#pub-oasis" data-show-area="perception">OASIS · ISVLSI 2026</a><a href="#pub-halrc" data-show-area="perception">In-sensor compression · IEEE TETC (under review)</a><a href="#pub-rtneus" data-show-area="perception">RT-NeuS · NeuS 2026</a></div>
+            <p>Lightweight encoders that compress learned representations inside the image sensor before anything leaves the chip, wearable EEG inference on microcontrollers that treats electrode count as a hardware design variable, and real-time neuro-symbolic video understanding through adaptive frame sampling and KV-cache reuse.</p>
+            <div class="papers"><a href="#pub-eeg2mcu" data-show-area="perception">EEG2MCU · DATE 2027</a><a href="#pub-oasis" data-show-area="perception">OASIS · ISVLSI 2026</a><a href="#pub-halrc" data-show-area="perception">In-sensor compression · IEEE TETC (under review)</a><a href="#pub-rtneus" data-show-area="perception">RT-NeuS · NeuS 2026</a></div>
           </article>
         </div>
       </section>
@@ -222,6 +227,28 @@
           <button type="button" data-filter="perception" aria-pressed="false">Perception</button>
         </div>
         <p class="sr-only" id="filter-status" aria-live="polite"></p>
+
+        <h3 class="year">2027</h3>
+
+        <article class="pub" id="pub-eeg2mcu" data-areas="edge perception">
+          <a class="pub-thumb" href="https://arxiv.org/abs/2611.23619" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/date2027_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
+          <div>
+            <div class="pub-meta"><span class="badge conf">Conference</span><span class="badge venue">DATE 2027</span></div>
+            <h3><a href="https://arxiv.org/abs/2611.23619" target="_blank" rel="noopener">EEG2MCU: Sensing-to-Execution Co-Design for Wearable EEG Inference</a></h3>
+            <p class="authors">Shoma Yukawa, Meghna Roychowdhury, <span class="me">Arnab Sanyal</span>, Chengwei Zhou, Shreyas Sen, and Gourav Datta</p>
+            <p class="venue-line"><a href="https://www.date-conference.com/" target="_blank" rel="noopener">Design, Automation and Test in Europe Conference (DATE) 2027</a></p>
+            <div class="links">
+              <a href="https://arxiv.org/pdf/2611.23619" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>PDF</a>
+              <a href="https://arxiv.org/abs/2611.23619" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-file"/></svg>arXiv</a>
+              <a href="https://scholar.google.com/citations?view_op=top_venues&amp;hl=en&amp;venue=cP2AyDfWCcQJ.2025&amp;vq=eng_computerhardwaredesign" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>Venue h5-index</a>
+            </div>
+            <details class="abstract">
+              <summary>Abstract</summary>
+              <p>Wearable EEG inference is constrained not only by model size, but also by the channel-dependent sensing front end that must process high-dimensional inputs before compact downstream computation. We present <strong>EEG2MCU</strong>, a sensing-to-execution co-design framework that treats electrode count as a hardware design variable through task-aware montage selection. EEG2MCU retains a compact time-frequency representation and generates only the INT8 regions required by each first-layer tile, avoiding full input materialization. Halo reuse and access-aware placement across Flash, SRAM, and tightly coupled memory further reduce redundant generation and data movement. On a Cortex-M7 MCU, EEG2MCU reduces peak SRAM by 11.38&times; relative to the baseline, including a 1.71&times; reduction from the 62-to-19 electrode montage, while reducing latency by 2.57&times; and energy by 2.48&times;. It retains 94&ndash;96% of full-montage accuracy, demonstrating practical high-dimensional EEG inference under tight embedded-resource constraints.</p>
+              <p class="terms">Index terms: Electroencephalography (EEG), wearable, TinyML, memory-aware inference, hardware&ndash;software co-design</p>
+            </details>
+          </div>
+        </article>
 
         <h3 class="year">2026</h3>
 
@@ -295,7 +322,7 @@
         </article>
 
         <article class="pub" id="pub-entromcu" data-areas="compression edge">
-          <a class="pub-thumb" href="https://repositories.lib.utexas.edu/items/027c9158-e8fb-45f2-b590-8cacf7ad1cc3" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/isvlsi2026_logo_asp_hu_8809a97f58ad5b47.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
+          <a class="pub-thumb" href="https://repositories.lib.utexas.edu/items/027c9158-e8fb-45f2-b590-8cacf7ad1cc3" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/isvlsi2026_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
           <div>
             <div class="pub-meta"><span class="badge conf">Conference</span><span class="badge venue">ISVLSI 2026</span><span class="badge note">Invited</span></div>
             <h3><a href="https://repositories.lib.utexas.edu/items/027c9158-e8fb-45f2-b590-8cacf7ad1cc3" target="_blank" rel="noopener">EntroMCU: A Hardware-Algorithm Vision for LLM Inference on Microcontrollers</a></h3>
@@ -316,7 +343,7 @@
         </article>
 
         <article class="pub" id="pub-oasis" data-areas="compression perception">
-          <a class="pub-thumb" href="https://arxiv.org/abs/2505.02256" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/isvlsi2026_logo_asp_hu_8809a97f58ad5b47.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
+          <a class="pub-thumb" href="https://arxiv.org/abs/2505.02256" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/isvlsi2026_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
           <div>
             <div class="pub-meta"><span class="badge conf">Conference</span><span class="badge venue">ISVLSI 2026</span></div>
             <h3><a href="https://arxiv.org/abs/2505.02256" target="_blank" rel="noopener">OASIS: Optimized Lightweight Autoencoder System for Distributed In-Sensor Computing</a></h3>
@@ -334,7 +361,7 @@
         </article>
 
         <article class="pub" id="pub-rtneus" data-areas="perception">
-          <a class="pub-thumb fill" href="https://sites.google.com/usc.edu/neus2026/home" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/neus2026_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
+          <a class="pub-thumb" href="https://sites.google.com/usc.edu/neus2026/home" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true"><img src="images/portfolio/neus2026_logo.jpg" alt="" width="395" height="250" loading="lazy" decoding="async"></a>
           <div>
             <div class="pub-meta"><span class="badge conf">Conference</span><span class="badge venue">NeuS 2026</span></div>
             <h3><a href="https://arxiv.org/abs/2602.23553" target="_blank" rel="noopener">RT-NeuS: Towards Real-Time Neuro-Symbolic Video Understanding via Adaptive Temporal Verification</a></h3>
@@ -590,7 +617,7 @@
           <div class="skill-row">
             <h3>Efficient AI<small>compression &amp; quantization</small></h3>
             <ul class="chips">
-              <li class="key">Post-training quantization</li><li class="key">FP8 / MX / INT4 / NF4 formats</li><li>Quantization-aware training</li><li>GPTQ · AWQ · SmoothQuant</li><li>Mixed precision</li><li class="key">Entropy coding (Huffman, rANS)</li><li>Pruning &amp; sparsity</li><li>Knowledge distillation</li><li>KV-cache optimization</li><li>Speculative decoding (prompt lookup)</li><li>Logarithmic number systems</li>
+              <li class="key">Post-training quantization</li><li class="key">FP8 / MX / INT4 / NF4 formats</li><li>Quantization-aware training</li><li>GPTQ · AWQ · SmoothQuant</li><li>Mixed precision</li><li class="key">Entropy coding (Huffman, rANS)</li><li>Pruning &amp; sparsity</li><li>Knowledge distillation</li><li>KV-cache optimization</li><li class="key">INT8 inference on microcontrollers (CNN, Transformer, Mamba)</li><li class="key">Memory-aware tiled inference (TinyML)</li><li>Speculative decoding (prompt lookup)</li><li>Logarithmic number systems</li>
             </ul>
           </div>
           <div class="skill-row">
@@ -602,7 +629,7 @@
           <div class="skill-row">
             <h3>Kernels &amp; accelerators<small>where the bits land</small></h3>
             <ul class="chips">
-              <li class="key">CUDA kernels</li><li>Triton</li><li class="key">AMD AI Engine (AIE)</li><li class="key">Qualcomm Hexagon HTP / HVX</li><li>Amazon AZ1 NPU</li><li>Arm Cortex-M · CMSIS-NN · Helium</li><li>NVIDIA Jetson (Nano, Orin)</li><li>FPGA (Verilog, HLS, Zynq UltraScale+)</li><li>RTL &amp; ASIC flow (Yosys, OpenSTA, OpenROAD, ASAP7)</li><li>OpenMP</li><li>OpenCL</li>
+              <li class="key">CUDA kernels</li><li>Triton</li><li class="key">AMD AI Engine (AIE)</li><li class="key">Qualcomm Hexagon HTP / HVX</li><li>Amazon AZ1 NPU</li><li class="key">Arm Cortex-M (M7, M55) · CMSIS-NN · Helium</li><li>STM32 MCUs</li><li>Flash / SRAM / TCM memory placement</li><li>NVIDIA Jetson (Nano, Orin)</li><li>FPGA (Verilog, HLS, Zynq UltraScale+)</li><li>RTL &amp; ASIC flow (Yosys, OpenSTA, OpenROAD, ASAP7)</li><li>OpenMP</li><li>OpenCL</li>
             </ul>
           </div>
           <div class="skill-row">
@@ -614,7 +641,7 @@
           <div class="skill-row">
             <h3>Models<small>what I make smaller</small></h3>
             <ul class="chips">
-              <li>LLMs &amp; small LMs</li><li>Diffusion (SDXL, PixArt-&alpha;)</li><li>Vision-language models</li><li>CNNs &amp; ViTs</li><li>RNNs / LSTMs</li>
+              <li>LLMs &amp; small LMs</li><li>Diffusion (SDXL, PixArt-&alpha;)</li><li>Vision-language models</li><li>CNNs &amp; ViTs</li><li>State-space models (Mamba)</li><li>RNNs / LSTMs</li><li>EEG &amp; biosignal models</li>
             </ul>
           </div>
           <div class="skill-row">
@@ -626,7 +653,7 @@
           <div class="skill-row">
             <h3>Tools</h3>
             <ul class="chips">
-              <li>Linux</li><li>Git</li><li>Docker</li><li>CMake / Bazel</li><li>Slurm &amp; HPC clusters</li><li>Nsight &amp; on-device profilers</li><li>Vivado</li><li>Verilator · Icarus Verilog</li>
+              <li>Linux</li><li>Git</li><li>Docker</li><li>CMake / Bazel</li><li>Slurm &amp; HPC clusters</li><li>Nsight &amp; on-device profilers (incl. DWT cycle counters)</li><li>Vivado</li><li>Verilator · Icarus Verilog</li>
             </ul>
           </div>
         </div>
@@ -779,6 +806,8 @@
         <a href="mailto:mail@arnabsanyal.com" aria-label="Email"><svg class="icon" aria-hidden="true"><use href="#i-mail"/></svg></a>
         <a href="https://scholar.google.com/citations?user=D9ebkwoAAAAJ" target="_blank" rel="noopener" aria-label="Google Scholar"><svg class="icon" aria-hidden="true"><use href="#i-scholar"/></svg></a>
         <a href="https://orcid.org/0000-0001-6365-6769" target="_blank" rel="noopener" aria-label="ORCID"><i class="ai ai-orcid" aria-hidden="true"></i></a>
+        <a href="https://www.researchgate.net/profile/Arnab-Sanyal-4" target="_blank" rel="noopener" aria-label="ResearchGate"><i class="ai ai-researchgate" aria-hidden="true"></i></a>
+        <a href="https://www.alphaxiv.org/@arnab-sanyal" target="_blank" rel="noopener" aria-label="alphaXiv"><svg class="icon" aria-hidden="true"><use href="#i-alphaxiv"/></svg></a>
         <a href="https://medium.com/@arnabsanyal_15738" target="_blank" rel="noopener" aria-label="Medium"><svg class="icon" aria-hidden="true"><use href="#i-medium"/></svg></a>
         <a href="https://www.instagram.com/ollie.bear___/" target="_blank" rel="noopener" aria-label="Oliver the cat on Instagram"><svg class="icon" aria-hidden="true"><use href="#i-instagram"/></svg></a>
         <button type="button" data-dialog="qr-dialog" aria-label="Show contact QR code"><svg class="icon" aria-hidden="true"><use href="#i-qr"/></svg></button>
