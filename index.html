@@ -219,15 +219,19 @@
       <!-- ===================== Publications ===================== -->
       <section class="section" id="publications" aria-labelledby="pubs-h">
         <h2 class="section-label" id="pubs-h">Research Blogs and Publications</h2>
-        <div class="filters" role="group" aria-label="Filter publications by research area" hidden>
+        <div class="filters" role="group" aria-label="Filter publications by research area or authorship" hidden>
           <button type="button" data-filter="all" aria-pressed="true">All</button>
           <button type="button" data-filter="ptq" aria-pressed="false">Quantization</button>
           <button type="button" data-filter="compression" aria-pressed="false">Compression</button>
           <button type="button" data-filter="edge" aria-pressed="false">Co-design</button>
           <button type="button" data-filter="perception" aria-pressed="false">Perception</button>
+          <span class="filter-sep" aria-hidden="true"></span>
+          <button type="button" class="toggle" data-toggle="first" aria-pressed="false">First author<span class="count"></span></button>
         </div>
         <p class="sr-only" id="filter-status" aria-live="polite"></p>
 
+        <div class="pub-list" id="pub-list" role="region" aria-label="Publications" tabindex="0">
+          <p class="pub-empty" hidden>No papers match these filters.</p>
         <h3 class="year">2027</h3>
 
         <article class="pub" id="pub-eeg2mcu" data-areas="edge perception">
@@ -423,6 +427,7 @@
             </details>
           </div>
         </article>
+        </div>
       </section>
 
       <!-- ===================== Experience ===================== -->
