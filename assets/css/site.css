@@ -227,6 +227,24 @@ p { margin: 0 0 1em; }
 }
 .filters button:hover { color: var(--ink); border-color: var(--ink-faint); }
 .filters button[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); background: var(--accent-dim); }
+.filter-sep { width: 1px; align-self: stretch; margin: 4px 4px; background: var(--rule); }
+.filters .count { margin-left: 6px; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+/* The list scrolls in its own box, so the filters stay in view and the page
+   doesn't grow with every paper. Phones keep the plain page scroll (below). */
+.pub-list {
+  /* the window height less the sticky header and the filter row, so the whole box fits on screen */
+  max-height: max(420px, min(calc(100vh - 250px), 900px)); overflow-y: auto; overscroll-behavior: contain;
+  padding-right: 14px; border-top: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft);
+  scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+}
+.pub-empty { margin: 0; padding: 28px 0; font-family: var(--sans); font-size: 0.9rem; color: var(--ink-faint); }
+.pub-empty[hidden] { display: none; }
+.pub-list:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.pub-list::-webkit-scrollbar { width: 8px; }
+.pub-list::-webkit-scrollbar-track { background: transparent; }
+.pub-list::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 70%, transparent); border-radius: 99px; }
+.pub-list::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 .legend { font-family: var(--sans); font-size: 0.76rem; color: var(--ink-faint); margin: 10px 0 0; }
 
 .year { margin: 34px 0 6px; font-family: var(--sans); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.14em; color: var(--ink-faint); }
@@ -423,6 +441,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   .site-header { background: color-mix(in srgb, var(--bg) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom-color: var(--rule); }
 }
 @media (max-width: 720px) {
+  .pub-list { max-height: none; overflow: visible; padding-right: 0; border: 0; }
   html { font-size: 16px; }
   .hero { grid-template-columns: 1fr; gap: 20px; padding-top: 32px; }
   .portrait { width: 132px; }
@@ -450,6 +469,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
   :root { --bg: #fff; --ink: #000; --ink-soft: #222; --ink-faint: #444; --card: #fff; --rule: #ccc; }
   body { background: #fff; color: #000; }
   details.abstract > *:not(summary) { display: block; }
+  .pub-list { max-height: none !important; overflow: visible !important; }
   img.ink { filter: none !important; }
   img.logo-day { display: block !important; }
   img.logo-night { display: none !important; }

@@ -125,13 +125,27 @@
     var pubs = document.querySelectorAll(".pub");
     var years = document.querySelectorAll(".year");
     var status = document.getElementById("filter-status");
-    var applyFilter = function (area) {
-      filterBar.querySelectorAll("button").forEach(function (b) {
-        b.setAttribute("aria-pressed", String(b.getAttribute("data-filter") === area));
+    var list = document.getElementById("pub-list");
+    var empty = list && list.querySelector(".pub-empty");
+    var firstBtn = filterBar.querySelector('[data-toggle="first"]');
+    // A paper is first-authored when its author line opens with the .me name.
+    var isFirst = function (p) {
+      var a = p.querySelector(".authors"), me = a && a.querySelector(".me");
+      return !!me && a.textContent.trim().indexOf(me.textContent.trim()) === 0;
+    };
+    var firstCount = 0;
+    pubs.forEach(function (p) { if (isFirst(p)) { p.setAttribute("data-first", ""); firstCount++; } });
+    if (firstBtn) firstBtn.querySelector(".count").textContent = firstCount;
+    var state = { area: "all", first: false };
+    var applyFilter = function () {
+      filterBar.querySelectorAll("button[data-filter]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.getAttribute("data-filter") === state.area));
       });
+      if (firstBtn) firstBtn.setAttribute("aria-pressed", String(state.first));
       var shown = 0;
       pubs.forEach(function (p) {
-        var match = area === "all" || (" " + p.getAttribute("data-areas") + " ").indexOf(" " + area + " ") !== -1;
+        var match = (state.area === "all" || (" " + p.getAttribute("data-areas") + " ").indexOf(" " + state.area + " ") !== -1) &&
+                    (!state.first || p.hasAttribute("data-first"));
         p.hidden = !match;
         if (match) shown++;
       });
@@ -141,14 +155,20 @@
         y.hidden = !any;
       });
       if (status) status.textContent = shown + (shown === 1 ? " paper" : " papers") + " shown";
+      if (empty) empty.hidden = shown > 0;
     };
     filterBar.addEventListener("click", function (e) {
-      var b = e.target.closest("button[data-filter]");
-      if (b) applyFilter(b.getAttribute("data-filter"));
+      var b = e.target.closest("button");
+      if (!b) return;
+      if (b.hasAttribute("data-filter")) state.area = b.getAttribute("data-filter");
+      else if (b === firstBtn) state.first = !state.first;
+      else return;
+      applyFilter();
+      if (list) list.scrollTop = 0;
     });
-    // research-area chips jump to the list pre-filtered
+    // research-area chips jump to the list pre-filtered (all authors, so the linked paper is shown)
     document.querySelectorAll("[data-show-area]").forEach(function (a) {
-      a.addEventListener("click", function () { applyFilter(a.getAttribute("data-show-area")); });
+      a.addEventListener("click", function () { state.area = a.getAttribute("data-show-area"); state.first = false; applyFilter(); });
     });
   }
 
